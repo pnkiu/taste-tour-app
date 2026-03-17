@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TasteTourApp.Views.MainPage"
+             Title="Khám Phá Ẩm Thực">
+
+    <VerticalStackLayout Padding="20" Spacing="15" BackgroundColor="#F4F6F7">
+
+        <Label Text="📍 Đang ở gần bạn" 
+               FontSize="24" 
+               FontAttributes="Bold" 
+               TextColor="#2C3E50" />
+
+        <CollectionView x:Name="DanhSachQuanAn">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+
+                    <Frame Margin="0,0,0,15" Padding="15" CornerRadius="12" HasShadow="True" BorderColor="Transparent" BackgroundColor="White">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding TenQuan}" FontSize="18" FontAttributes="Bold" TextColor="#E74C3C"/>
+                            <Label Text="{Binding MoTa}" FontSize="14" TextColor="#7F8C8D" Margin="0,5,0,0" LineBreakMode="WordWrap"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </VerticalStackLayout>
+</ContentPage>
