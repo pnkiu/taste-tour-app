@@ -2,29 +2,238 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TasteTourApp.Views.MainPage"
-             Title="Khám Phá Ẩm Thực">
+             NavigationPage.HasNavigationBar="False"
+             BackgroundColor="#F5F3F0">
 
-    <VerticalStackLayout Padding="20" Spacing="15" BackgroundColor="#F4F6F7">
+    <Grid>
 
-        <Label Text="📍 Đang ở gần bạn" 
-               FontSize="24" 
-               FontAttributes="Bold" 
-               TextColor="#2C3E50" />
+        <!-- ===== LAYER 0: BẢN ĐỒ LEAFLET qua WebView ===== -->
+        <WebView x:Name="BanDoWebView"
+                 VerticalOptions="FillAndExpand"
+                 HorizontalOptions="FillAndExpand"
+                 ZIndex="0"
+                 Navigating="BanDoWebView_Navigating" />
 
-        <CollectionView x:Name="DanhSachQuanAn">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
+        <!-- ===== LAYER 1: THANH TÌM KIẾM + TAG ===== -->
+        <VerticalStackLayout ZIndex="1" VerticalOptions="Start" Spacing="0">
+            <Border BackgroundColor="White" StrokeThickness="0" Padding="16,0,10,12">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,2" Radius="12" Opacity="0.06" />
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="12">
+                    <Border BackgroundColor="White"
+                            StrokeShape="RoundRectangle 16"
+                            Stroke="#E8E4DE" StrokeThickness="1" Padding="14,0">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.08" />
+                        </Border.Shadow>
+                        <Grid ColumnDefinitions="Auto,*,Auto" HeightRequest="48">
+                            <Label Grid.Column="0" Text="🔍" VerticalOptions="Center"
+                                   FontSize="16" Margin="0,0,8,0" />
+                            <Label x:Name="LblSearchPlaceholder" Grid.Column="1"
+                                   Text="Tìm quán, địa điểm..."
+                                   VerticalOptions="Center" FontSize="14" TextColor="#AAAAAA" />
+                            <Border Grid.Column="2" BackgroundColor="#2D6A4F"
+                                    StrokeShape="RoundRectangle 10" StrokeThickness="0"
+                                    WidthRequest="32" HeightRequest="32" VerticalOptions="Center">
+                                <Label Text="⊞" TextColor="White" FontSize="15"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                        <HorizontalStackLayout Spacing="8" x:Name="TagFilterRow">
+                            <Border x:Name="TagTatCa" BackgroundColor="#2D6A4F"
+                                    StrokeShape="RoundRectangle 20" StrokeThickness="0" Padding="14,7">
+                                <Label Text="Tất cả" TextColor="White" FontSize="12" FontAttributes="Bold" />
+                            </Border>
+                            <Border x:Name="TagOc" BackgroundColor="White"
+                                    StrokeShape="RoundRectangle 20" Stroke="#E0DDD8" StrokeThickness="1" Padding="14,7">
+                                <Label Text="🦪 Ốc" TextColor="#555555" FontSize="12" FontAttributes="Bold" />
+                            </Border>
+                            <Border x:Name="TagHaiSan" BackgroundColor="White"
+                                    StrokeShape="RoundRectangle 20" Stroke="#E0DDD8" StrokeThickness="1" Padding="14,7">
+                                <Label Text="🦑 Hải sản" TextColor="#555555" FontSize="12" FontAttributes="Bold" />
+                            </Border>
+                            <Border x:Name="TagSushi" BackgroundColor="White"
+                                    StrokeShape="RoundRectangle 20" Stroke="#E0DDD8" StrokeThickness="1" Padding="14,7">
+                                <Label Text="🍱 Sushi" TextColor="#555555" FontSize="12" FontAttributes="Bold" />
+                            </Border>
+                        </HorizontalStackLayout>
+                    </ScrollView>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
 
-                    <Frame Margin="0,0,0,15" Padding="15" CornerRadius="12" HasShadow="True" BorderColor="Transparent" BackgroundColor="White">
-                        <VerticalStackLayout>
-                            <Label Text="{Binding TenQuan}" FontSize="18" FontAttributes="Bold" TextColor="#E74C3C"/>
-                            <Label Text="{Binding MoTa}" FontSize="14" TextColor="#7F8C8D" Margin="0,5,0,0" LineBreakMode="WordWrap"/>
-                        </VerticalStackLayout>
-                    </Frame>
+        <!-- ===== LAYER 2: BOTTOM SHEET DANH SÁCH POI ===== -->
+        <Border x:Name="BottomSheetDanhSach"
+                ZIndex="2" VerticalOptions="End"
+                BackgroundColor="White"
+                StrokeShape="RoundRectangle 24,24,0,0"
+                StrokeThickness="0"
+                Margin="0,0,0,88" Padding="0,12,0,8">
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,-4" Radius="20" Opacity="0.10" />
+            </Border.Shadow>
+            <VerticalStackLayout Spacing="0">
+                <BoxView WidthRequest="36" HeightRequest="4" CornerRadius="2"
+                         Color="#DDDDDD" HorizontalOptions="Center" Margin="0,0,0,14" />
+                <Label Text="ĐIỂM THUYẾT MINH GẦN BẠN"
+                       FontSize="11" FontAttributes="Bold" TextColor="#AAAAAA"
+                       CharacterSpacing="1.2" Margin="20,0,0,14" />
+                <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                    <HorizontalStackLayout x:Name="PoiCardRow" Spacing="12" Padding="16,4,16,4" />
+                </ScrollView>
+            </VerticalStackLayout>
+        </Border>
 
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+        <!-- ===== LAYER 3: THẺ CHI TIẾT POI ===== -->
+        <Border x:Name="TheChiTiet"
+                ZIndex="3" VerticalOptions="End"
+                BackgroundColor="White"
+                StrokeShape="RoundRectangle 24,24,0,0"
+                StrokeThickness="0"
+                Margin="0,0,0,88"
+                MinimumHeightRequest="320">
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,-4" Radius="24" Opacity="0.15" />
+            </Border.Shadow>
+            <Grid RowDefinitions="Auto,*,Auto">
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Padding="20,16,20,0">
+                    <BoxView WidthRequest="36" HeightRequest="4" CornerRadius="2"
+                             Color="#DDDDDD" HorizontalOptions="Center"
+                             VerticalOptions="Center" Grid.Column="0" />
+                    <Border Grid.Column="1" BackgroundColor="#F5F3F0"
+                            StrokeShape="RoundRectangle 10" StrokeThickness="0"
+                            WidthRequest="32" HeightRequest="32">
+                        <Label x:Name="BtnDongSheet" Text="✕" FontSize="14"
+                               TextColor="#888888"
+                               HorizontalOptions="Center" VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="BtnDong_Tapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Border>
+                </Grid>
+                <VerticalStackLayout Grid.Row="1" Padding="20,16,20,0" Spacing="0">
+                    <Border BackgroundColor="#E8F5E9" StrokeShape="RoundRectangle 20"
+                            StrokeThickness="0" HorizontalOptions="Start"
+                            Padding="10,5" Margin="0,0,0,10">
+                        <Label Text="🎙️ Có thuyết minh"
+                               FontSize="11" FontAttributes="Bold" TextColor="#2D6A4F" />
+                    </Border>
+                    <Label x:Name="LblTenQuan" Text="Tên Quán Ăn"
+                           FontSize="22" FontAttributes="Bold" TextColor="#1A1A1A"
+                           LineHeight="1.2" Margin="0,0,0,10" />
+                    <HorizontalStackLayout Spacing="5" Margin="0,0,0,14">
+                        <Label Text="📍" FontSize="12" VerticalOptions="Center" />
+                        <Label x:Name="LblKhoangCach" Text="Vĩnh Khánh, Q.4"
+                               FontSize="12" TextColor="#666666" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label x:Name="LblMoTa" Text="Mô tả..."
+                           FontSize="14" TextColor="#555555" LineHeight="1.65"
+                           MaxLines="3" LineBreakMode="TailTruncation" Margin="0,0,0,20" />
+                    <BoxView HeightRequest="1" Color="#EAE6E0" Margin="0,0,0,16" />
+                    <Label Text="THUYẾT MINH ÂM THANH"
+                           FontSize="11" FontAttributes="Bold" TextColor="#AAAAAA"
+                           CharacterSpacing="1.2" Margin="0,0,0,12" />
+                    <Border BackgroundColor="White" StrokeShape="RoundRectangle 16"
+                            Stroke="#EAE6E0" StrokeThickness="1"
+                            Padding="14" Margin="0,0,0,20">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.06" />
+                        </Border.Shadow>
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Border Grid.Column="0" BackgroundColor="#2D6A4F"
+                                    StrokeShape="RoundRectangle 14" StrokeThickness="0"
+                                    WidthRequest="48" HeightRequest="48">
+                                <Label x:Name="LblPlayIcon" Text="▶" FontSize="18"
+                                       TextColor="White"
+                                       HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="BtnPlay_Tapped" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Padding="14,0,0,0"
+                                                 VerticalOptions="Center" Spacing="4">
+                                <Label x:Name="LblAudioTen" Text="Đang tải..."
+                                       FontSize="13" FontAttributes="Bold" TextColor="#1A1A1A"
+                                       LineBreakMode="TailTruncation" MaxLines="1" />
+                                <Label x:Name="LblAudioSub" Text="Tiếng Việt · TTS"
+                                       FontSize="11" TextColor="#AAAAAA" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+                <Grid Grid.Row="2" ColumnDefinitions="*,2*"
+                      Padding="20,0,20,24" ColumnSpacing="10">
+                    <Border Grid.Column="0" BackgroundColor="#F0F7F4"
+                            StrokeShape="RoundRectangle 14"
+                            Stroke="#C8E6D8" StrokeThickness="1.5">
+                        <Label Text="🗺️ Chỉ đường" FontSize="13" FontAttributes="Bold"
+                               TextColor="#2D6A4F"
+                               HorizontalOptions="Center" VerticalOptions="Center" Padding="0,14">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="BtnChiDuong_Tapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Border>
+                    <Border Grid.Column="1" BackgroundColor="#2D6A4F"
+                            StrokeShape="RoundRectangle 14" StrokeThickness="0">
+                        <Border.Shadow>
+                            <Shadow Brush="#2D6A4F" Offset="0,4" Radius="12" Opacity="0.35" />
+                        </Border.Shadow>
+                        <Label Text="▶  Nghe thuyết minh" FontSize="13" FontAttributes="Bold"
+                               TextColor="White"
+                               HorizontalOptions="Center" VerticalOptions="Center" Padding="0,14">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="BtnNgheThuyetMinh_Tapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
 
-    </VerticalStackLayout>
+        <!-- ===== LAYER 4: NAVIGATION BAR ===== -->
+        <Grid ZIndex="4" VerticalOptions="End" BackgroundColor="White" HeightRequest="88">
+            <Grid.Shadow>
+                <Shadow Brush="Black" Offset="0,-2" Radius="10" Opacity="0.08" />
+            </Grid.Shadow>
+            <BoxView BackgroundColor="White" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Grid ColumnDefinitions="*,72,*" VerticalOptions="Fill" Padding="0,8,0,20">
+                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center"
+                                     VerticalOptions="End" Spacing="3" Padding="0,0,0,4">
+                    <Label x:Name="NavIconMap" Text="🗺️" FontSize="22" HorizontalOptions="Center" />
+                    <Label x:Name="NavLabelMap" Text="Bản đồ" FontSize="10"
+                           FontAttributes="Bold" TextColor="#2D6A4F" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                <Border Grid.Column="1" BackgroundColor="#2D6A4F"
+                        StrokeShape="RoundRectangle 20" StrokeThickness="0"
+                        WidthRequest="58" HeightRequest="58"
+                        HorizontalOptions="Center" VerticalOptions="Start" Margin="0,-20,0,0">
+                    <Border.Shadow>
+                        <Shadow Brush="#2D6A4F" Offset="0,4" Radius="16" Opacity="0.45" />
+                    </Border.Shadow>
+                    <Label Text="🎧" FontSize="24"
+                           HorizontalOptions="Center" VerticalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="BtnAudio_Tapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Border>
+                <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center"
+                                     VerticalOptions="End" Spacing="3" Padding="0,0,0,4">
+                    <Label x:Name="NavIconList" Text="☰" FontSize="22" HorizontalOptions="Center" />
+                    <Label x:Name="NavLabelList" Text="Danh sách" FontSize="10"
+                           FontAttributes="Bold" TextColor="#BBBBBB" HorizontalOptions="Center" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="NavDanhSach_Tapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+            </Grid>
+        </Grid>
+
+    </Grid>
 </ContentPage>

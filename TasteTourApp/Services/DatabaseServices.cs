@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
+using System.Threading.Tasks;
 using SQLite;
 using TasteTourApp.Models; // Gọi khuôn đúc QuanAn ra
 
@@ -12,26 +13,18 @@ namespace TasteTourApp.Services
         private SQLiteAsyncConnection _db;
         private async Task Init()
         {
-            // Nếu kho đã mở rồi thì không cần mở lại
-            if (_db != null)
-                return;
+            var databasePath = Path.Combine(FileSystem.AppDataDirectory, "TasteTour_VinhKhanh.db3");
 
-            var databasePath = Path.Combine(FileSystem.AppDataDirectory, "TasteTour.db3");
-            
             _db = new SQLiteAsyncConnection(databasePath);
 
-            // Tạo table dựa trên khuôn đúc QuanAn 
             await _db.CreateTableAsync<QuanAn>();
 
-            // Nạp dữ liệu mẫu
-            // Đếm xem trong bảng đã có quán ăn nào chưa
-
             var soLuong = await _db.Table<QuanAn>().CountAsync();
-            if (soLuong == 0)
+            if(soLuong == 0)
             {
-                // Nếu kho trống (lần đầu cài app), thủ kho sẽ tự động xếp 2 món này vào kho
-                await _db.InsertAsync(new QuanAn { Id = "POI_01", TenQuan = "Bún Bò Huế Oanh", MoTa = "Đặc sản bún bò chuẩn vị Huế, nước dùng thanh ngọt mắm ruốc.", ViDo = 10.762622, KinhDo = 106.660172 });
-                await _db.InsertAsync(new QuanAn { Id = "POI_02", TenQuan = "Chè Thái Ý Phương", MoTa = "Quán chè sầu riêng nổi tiếng nhất khu phố, luôn tấp nập khách.", ViDo = 10.763000, KinhDo = 106.660500 });
+                await _db.InsertAsync(new QuanAn { Id = "VK_01", TenQuan = "Ốc Phát Vĩnh Khánh", MoTa = "Quán ốc huyền thoại sầm uất nhất con đường. Nổi tiếng với ốc hương nướng muối ớt và càng ghẹ.", ViDo = 10.761967135852936, KinhDo = 106.70209485438174 });
+                await _db.InsertAsync(new QuanAn { Id = "VK_02", TenQuan = "Ốc Thảo", MoTa = "Không gian thoáng mát, menu hải sản đa dạng. Sò điệp nướng mỡ hành ở đây là chân ái.", ViDo = 10.761688291527175, KinhDo = 106.7023669506661 });
+                await _db.InsertAsync(new QuanAn { Id = "VK_03", TenQuan = "Sushi Viên Vĩnh Khánh", MoTa = "Đổi gió với sushi giá sinh viên ngay giữa phố ốc. Ngon, bổ, rẻ và cực kỳ đông khách.", ViDo = 10.762500, KinhDo = 106.699000 });
             }
         }
 
@@ -42,6 +35,12 @@ namespace TasteTourApp.Services
             await Init();
             // Nhặt toàn bộ dữ liệu trong bảng QuanAn và trả về dưới dạng Danh sách (List)
             return await _db.Table<QuanAn>().ToListAsync();
+        }
+
+        public async Task<QuanAn> LayQuanAnTheoId(string idQuan)
+        {
+            await Init();
+            return await _db.Table<QuanAn>().FirstOrDefaultAsync(q => q.Id == idQuan);
         }
     }
 }
