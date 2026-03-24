@@ -14,5 +14,10 @@ namespace TasteTourApp.Models
         public string MoTa { get; set; }
         public double ViDo {  get; set; }
         public double KinhDo { get; set; }
+        public string HinhAnh { get; set; }
+        public string LoaiQuan { get; set; }      // "Oc" / "HaiSan" / "Sushi"
+        public double BanKinhMet { get; set; } = 50;  // Geofence
+        public int MucUuTien { get; set; } = 1;       // 1-10
+        public int ThuTuHienThi { get; set; }         // Thứ tự trong danh sách
     }
 }
