@@ -1,0 +1,42 @@
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace TravelGuide.Web.Models 
+{
+    public class POI
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required(ErrorMessage = "Vui lòng nhập tên điểm thuyết minh")]
+        [Display(Name = "Tên địa điểm")]
+        public string Name { get; set; } = string.Empty;
+
+        [Display(Name = "Mô tả chi tiết")]
+        public string? Description { get; set; }
+
+        // --- Dữ liệu phục vụ Geofencing (Slide 1) ---
+        [Required]
+        [Display(Name = "Vĩ độ (Lat)")]
+        public double Latitude { get; set; }
+
+        [Required]
+        [Display(Name = "Kinh độ (Lng)")]
+        public double Longitude { get; set; }
+
+        [Display(Name = "Bán kính kích hoạt (m)")]
+        public double Radius { get; set; } = 50; // Mặc định 50m
+
+        [Display(Name = "Mức ưu tiên")]
+        public int Priority { get; set; } = 1;
+
+        // --- Dữ liệu đa phương tiện (Slide 1 & nội dung) ---
+        [Display(Name = "Ảnh minh họa (Link)")]
+        public string? ImageUrl { get; set; }
+
+        [Display(Name = "File Audio hoặc Script TTS")]
+        public string? AudioContent { get; set; }
+
+        [Display(Name = "Link bản đồ")]
+        public string? MapLink { get; set; }
+    }
+}
