@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TasteTourApp.Views.MainPage"
              NavigationPage.HasNavigationBar="False"
+             Shell.NavBarIsVisible="False"
              BackgroundColor="#F5F3F0">
 
     <Grid>
@@ -14,14 +15,18 @@
                  ZIndex="0"
                  Navigating="BanDoWebView_Navigating" />
 
-        <!-- ===== LAYER 1: THANH TÌM KIẾM + TAG ===== -->
+        <!-- ===== LAYER 1: THANH TÌM KIẾM ===== -->
         <VerticalStackLayout ZIndex="1" VerticalOptions="Start" Spacing="0">
-            <Border BackgroundColor="White" StrokeThickness="0" Padding="16,0,16,12">
+            <Border BackgroundColor="White" StrokeThickness="0" Padding="16,16,16,14">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,2" Radius="12" Opacity="0.06" />
                 </Border.Shadow>
-                <VerticalStackLayout Spacing="12">
-                    <Border BackgroundColor="White"
+
+                <!-- Search bar + Avatar trên cùng 1 hàng -->
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" VerticalOptions="Center">
+
+                    <!-- Thanh tìm kiếm -->
+                    <Border Grid.Column="0" BackgroundColor="White"
                             StrokeShape="RoundRectangle 16"
                             Stroke="#E8E4DE" StrokeThickness="1" Padding="14,0">
                         <Border.Shadow>
@@ -36,51 +41,104 @@
                             <Border Grid.Column="2" BackgroundColor="#2D6A4F"
                                     StrokeShape="RoundRectangle 10" StrokeThickness="0"
                                     WidthRequest="32" HeightRequest="32" VerticalOptions="Center">
-                                <Label Text="⊞" TextColor="White" FontSize="15"
+                                <Label Text="🔍" TextColor="White" FontSize="15"
                                        HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
                         </Grid>
                     </Border>
-                    <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
-                        <HorizontalStackLayout Spacing="8" x:Name="TagFilterRow">
-                            <Border x:Name="TagTatCa" BackgroundColor="#2D6A4F"
-                                    StrokeShape="RoundRectangle 20" StrokeThickness="0" Padding="14,7">
-                                <Label Text="Tất cả" TextColor="White" FontSize="12" FontAttributes="Bold" />
-                            </Border>
-                            <Border x:Name="TagOc" BackgroundColor="White"
-                                    StrokeShape="RoundRectangle 20" Stroke="#E0DDD8" StrokeThickness="1" Padding="14,7">
-                                <Label Text="🦪 Ốc" TextColor="#555555" FontSize="12" FontAttributes="Bold" />
-                            </Border>
-                            <Border x:Name="TagHaiSan" BackgroundColor="White"
-                                    StrokeShape="RoundRectangle 20" Stroke="#E0DDD8" StrokeThickness="1" Padding="14,7">
-                                <Label Text="🦑 Hải sản" TextColor="#555555" FontSize="12" FontAttributes="Bold" />
-                            </Border>
-                            <Border x:Name="TagSushi" BackgroundColor="White"
-                                    StrokeShape="RoundRectangle 20" Stroke="#E0DDD8" StrokeThickness="1" Padding="14,7">
-                                <Label Text="🍱 Sushi" TextColor="#555555" FontSize="12" FontAttributes="Bold" />
-                            </Border>
-                        </HorizontalStackLayout>
-                    </ScrollView>
-                </VerticalStackLayout>
+
+                    <!-- Avatar user -->
+                    <Border Grid.Column="1" BackgroundColor="#20b7e7d2" Stroke="#b7e7d2" StrokeThickness="2"
+                            StrokeShape="RoundRectangle 24"
+                            WidthRequest="48" HeightRequest="48" VerticalOptions="Center">
+                        <Label Text="👤" FontSize="20" TextColor="#376454"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+
+                </Grid>
             </Border>
         </VerticalStackLayout>
 
-        <!-- ===== LAYER 2: BOTTOM SHEET DANH SÁCH POI ===== -->
+        <!-- ===== FAB: NÚT ĐỊNH VỊ ===== -->
+        <Border x:Name="FabLocateMe"
+                ZIndex="2"
+                VerticalOptions="End" HorizontalOptions="End"
+                Margin="0,0,20,300"
+                BackgroundColor="White"
+                StrokeShape="RoundRectangle 28"
+                StrokeThickness="0"
+                WidthRequest="56" HeightRequest="56">
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,3" Radius="10" Opacity="0.15" />
+            </Border.Shadow>
+            <Label Text="📍" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="BtnLocateMe_Tapped" />
+                </Label.GestureRecognizers>
+            </Label>
+        </Border>
+
+        <!-- ===== LAYER 2: BOTTOM SHEET DANH SÁCH POI (Draggable) ===== -->
         <Border x:Name="BottomSheetDanhSach"
-                ZIndex="2" VerticalOptions="End"
+                ZIndex="3" VerticalOptions="End"
                 BackgroundColor="White"
                 StrokeShape="RoundRectangle 24,24,0,0"
                 StrokeThickness="0"
                 Margin="0,0,0,88" Padding="0,12,0,8">
             <Border.Shadow>
-                <Shadow Brush="Black" Offset="0,-4" Radius="20" Opacity="0.10" />
+                <Shadow Brush="Black" Offset="0,-6" Radius="24" Opacity="0.12" />
             </Border.Shadow>
             <VerticalStackLayout Spacing="0">
-                <BoxView WidthRequest="36" HeightRequest="4" CornerRadius="2"
-                         Color="#DDDDDD" HorizontalOptions="Center" Margin="0,0,0,14" />
-                <Label Text="ĐIỂM THUYẾT MINH GẦN BẠN"
-                       FontSize="11" FontAttributes="Bold" TextColor="#AAAAAA"
-                       CharacterSpacing="1.2" Margin="20,0,0,14" />
+
+                <!-- Drag Handle (kéo lên/xuống) -->
+                <VerticalStackLayout Spacing="0">
+                    <BoxView WidthRequest="40" HeightRequest="5" CornerRadius="3"
+                             Color="#D0D0D0" HorizontalOptions="Center" Margin="0,0,0,10" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <PanGestureRecognizer PanUpdated="BottomSheet_PanUpdated" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+
+                <!-- Header row -->
+                <Grid ColumnDefinitions="*,Auto" Padding="20,0,20,10">
+                    <Label Text="ĐIỂM THUYẾT MINH GẦN BẠN"
+                           FontSize="11" FontAttributes="Bold" TextColor="#AAAAAA"
+                           CharacterSpacing="1.2" VerticalOptions="Center" />
+                    <Border Grid.Column="1" BackgroundColor="#E8F5E9"
+                            StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="10,4">
+                        <Label x:Name="LblPoiCount" Text="0 điểm" FontSize="10"
+                               FontAttributes="Bold" TextColor="#2D6A4F" />
+                    </Border>
+                </Grid>
+
+                <!-- Nearest POI highlight card -->
+                <Border x:Name="NearestPoiCard" BackgroundColor="#F0FFF4"
+                        StrokeShape="RoundRectangle 16" Stroke="#A7F3D0" StrokeThickness="1.5"
+                        Padding="14,12" Margin="16,0,16,10" IsVisible="False">
+                    <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                        <Border Grid.Column="0" BackgroundColor="#2D6A4F" StrokeThickness="0"
+                                StrokeShape="RoundRectangle 14" WidthRequest="40" HeightRequest="40"
+                                Margin="0,0,12,0">
+                            <Label Text="📌" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                            <Label Text="Gần bạn nhất" FontSize="9" FontAttributes="Bold"
+                                   TextColor="#2D6A4F" CharacterSpacing="0.8" />
+                            <Label x:Name="LblNearestName" Text="--" FontSize="14"
+                                   FontAttributes="Bold" TextColor="#1A1A1A"
+                                   LineBreakMode="TailTruncation" MaxLines="1" />
+                            <Label x:Name="LblNearestDistance" Text="-- m" FontSize="11"
+                                   TextColor="#666666" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="❯" FontSize="16" TextColor="#2D6A4F"
+                               VerticalOptions="Center" />
+                    </Grid>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="NearestPoi_Tapped" />
+                    </Border.GestureRecognizers>
+                </Border>
+
+                <!-- POI cards (horizontal scroll) -->
                 <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
                     <HorizontalStackLayout x:Name="PoiCardRow" Spacing="12" Padding="16,4,16,4" />
                 </ScrollView>
@@ -94,7 +152,7 @@
              3. Padding bottom tính sẵn cho nav bar (88px) + safe area
         -->
         <Border x:Name="TheChiTiet"
-                ZIndex="3"
+                ZIndex="5"
                 VerticalOptions="End"
                 BackgroundColor="White"
                 StrokeShape="RoundRectangle 24,24,0,0"
@@ -304,43 +362,64 @@
         </Border>
 
         <!-- ===== LAYER 4: NAVIGATION BAR ===== -->
-        <Grid ZIndex="4" VerticalOptions="End" BackgroundColor="White" HeightRequest="88">
-            <Grid.Shadow>
-                <Shadow Brush="Black" Offset="0,-2" Radius="10" Opacity="0.08" />
-            </Grid.Shadow>
-            <BoxView BackgroundColor="White" VerticalOptions="Fill" HorizontalOptions="Fill" />
-            <Grid ColumnDefinitions="*,72,*" VerticalOptions="Fill" Padding="0,8,0,20">
-                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center"
-                                     VerticalOptions="End" Spacing="3" Padding="0,0,0,4">
-                    <Label x:Name="NavIconMap" Text="🗺️" FontSize="22" HorizontalOptions="Center" />
-                    <Label x:Name="NavLabelMap" Text="Bản đồ" FontSize="10"
-                           FontAttributes="Bold" TextColor="#2D6A4F" HorizontalOptions="Center" />
-                </VerticalStackLayout>
-                <Border Grid.Column="1" BackgroundColor="#2D6A4F"
-                        StrokeShape="RoundRectangle 20" StrokeThickness="0"
-                        WidthRequest="58" HeightRequest="58"
-                        HorizontalOptions="Center" VerticalOptions="Start" Margin="0,-20,0,0">
-                    <Border.Shadow>
-                        <Shadow Brush="#2D6A4F" Offset="0,4" Radius="16" Opacity="0.45" />
-                    </Border.Shadow>
-                    <Label Text="🎧" FontSize="24"
-                           HorizontalOptions="Center" VerticalOptions="Center">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="BtnAudio_Tapped" />
-                        </Label.GestureRecognizers>
-                    </Label>
+        <Border ZIndex="6" VerticalOptions="End" HorizontalOptions="Fill" BackgroundColor="#CCFFFFFF"
+                StrokeShape="RoundRectangle 40,40,0,0" StrokeThickness="0"
+                Padding="24">
+            <Border.Shadow>
+                <Shadow Brush="#2E5B4B" Offset="0,-8" Radius="24" Opacity="0.08" />
+            </Border.Shadow>
+
+            <Grid ColumnDefinitions="*,*,*,*">
+
+                <!-- Explore (Active) -->
+                <Border Grid.Column="0"
+                        BackgroundColor="#D1FAE5"
+                        StrokeShape="RoundRectangle 20"
+                        StrokeThickness="0"
+                        Padding="20,8"
+                        Scale="1.1"
+                        HorizontalOptions="Center" VerticalOptions="Center">
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center">
+                        <Label Text="EXPLORE" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5"
+                               TextColor="#064E3B" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
                 </Border>
-                <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center"
-                                     VerticalOptions="End" Spacing="3" Padding="0,0,0,4">
-                    <Label x:Name="NavIconList" Text="☰" FontSize="22" HorizontalOptions="Center" />
-                    <Label x:Name="NavLabelList" Text="Danh sách" FontSize="10"
-                           FontAttributes="Bold" TextColor="#BBBBBB" HorizontalOptions="Center" />
+
+                <!-- Tours -->
+                <VerticalStackLayout Grid.Column="1"
+                                     Padding="20,8"
+                                     HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="TOURS" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5"
+                           TextColor="#80065F46" HorizontalOptions="Center" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="NavTours_Tapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+
+                <!-- Saved -->
+                <VerticalStackLayout Grid.Column="2"
+                                     Padding="20,8"
+                                     HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="SAVED" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5"
+                           TextColor="#80065F46" HorizontalOptions="Center" />
                     <VerticalStackLayout.GestureRecognizers>
                         <TapGestureRecognizer Tapped="NavDanhSach_Tapped" />
                     </VerticalStackLayout.GestureRecognizers>
                 </VerticalStackLayout>
+
+                <!-- Profile -->
+                <VerticalStackLayout Grid.Column="3"
+                                     Padding="20,8"
+                                     HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="PROFILE" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5"
+                           TextColor="#80065F46" HorizontalOptions="Center" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="NavProfile_Tapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+
             </Grid>
-        </Grid>
+        </Border>
 
     </Grid>
 </ContentPage>

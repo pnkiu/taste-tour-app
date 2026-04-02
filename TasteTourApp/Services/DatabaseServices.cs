@@ -10,7 +10,7 @@ namespace TasteTourApp.Services
     public class DatabaseService
     {
         // Tăng số này lên mỗi khi muốn reset data (ví dụ đổi tọa độ, thêm quán)
-        private const int DATA_VERSION = 4;
+        private const int DATA_VERSION = 5;
 
         private SQLiteAsyncConnection _db;
         private bool _daKhoiTao = false;
@@ -100,6 +100,34 @@ namespace TasteTourApp.Services
                 LoaiQuan = "Sushi",     // ← thêm
                 MucUuTien = 1,
                 ThuTuHienThi = 3
+            });
+            await _db.InsertAsync(new QuanAn
+            {
+                Id = "VK_04",
+                TenQuan = "Nướng Ngói Ti Ti",
+                MoTa = "Ngon",
+                // TODO: Thay tọa độ đúng bên dưới
+                // Cách lấy: mở Google Maps → tìm quán → chuột phải vào đúng vị trí → copy tọa độ
+                ViDo = 10.761588480289126,
+                KinhDo = 106.70254198833904,
+                HinhAnh = "nuong_ngoi_titi.jpg",
+                LoaiQuan = "HaiSan",     // ← thêm
+                MucUuTien = 5,
+                ThuTuHienThi = 4
+            });
+            await _db.InsertAsync(new QuanAn
+            {
+                Id = "VK_05",
+                TenQuan = "Ốc 35k",
+                MoTa = "Ngon",
+                // TODO: Thay tọa độ đúng bên dưới
+                // Cách lấy: mở Google Maps → tìm quán → chuột phải vào đúng vị trí → copy tọa độ
+                ViDo = 10.761538616423437,
+                KinhDo = 106.7026227999941,
+                HinhAnh = "oc_35k.jpg",
+                LoaiQuan = "Oc",     // ← thêm
+                MucUuTien = 6,
+                ThuTuHienThi = 5
             });
         }
 

@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TasteTourApp.Views.ProfilePage"
+             NavigationPage.HasNavigationBar="False"
+             BackgroundColor="#f5f6f7">
+
+    <Grid>
+        <!-- Nền -->
+        <BoxView Color="#f5f6f7" VerticalOptions="Fill" HorizontalOptions="Fill" />
+
+        <ScrollView VerticalScrollBarVisibility="Never" Margin="0,0,0,88">
+            <VerticalStackLayout Padding="24" Spacing="0" Margin="0,64,0,0">
+
+                <!-- Profile Header Section -->
+                <VerticalStackLayout HorizontalOptions="Center" Margin="0,0,0,40" Spacing="0">
+                    <!-- Avatar Area -->
+                    <Grid WidthRequest="130" HeightRequest="140" HorizontalOptions="Center" Margin="0,0,0,24">
+                        <!-- Avatar circle -->
+                        <Border BackgroundColor="#33b7e7d2" Stroke="#ffffff" StrokeThickness="4" StrokeShape="RoundRectangle 64"
+                                WidthRequest="128" HeightRequest="128" HorizontalOptions="Center" VerticalOptions="Start">
+                            <Border.Shadow>
+                                <Shadow Brush="#064E3B" Offset="0,4" Radius="10" Opacity="0.1" />
+                            </Border.Shadow>
+                            <!-- Sử dụng emoji icon đại diện người dùng -->
+                            <Label Text="👤" FontSize="48" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        
+                        <!-- Premium label -->
+                        <Border BackgroundColor="#6942bd" StrokeThickness="0" StrokeShape="RoundRectangle 12"
+                                HorizontalOptions="Center" VerticalOptions="End" Margin="0,0,0,6"
+                                Padding="12,4">
+                            <Border.Shadow>
+                                <Shadow Brush="#6942bd" Offset="0,4" Radius="8" Opacity="0.3" />
+                            </Border.Shadow>
+                            <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                                <Label Text="★" TextColor="#f8f0ff" FontSize="10" VerticalOptions="Center" />
+                                <Label Text="PREMIUM MEMBER" TextColor="#f8f0ff" FontSize="9" FontAttributes="Bold" CharacterSpacing="1.5" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <Label Text="Guest" FontSize="28" FontAttributes="Bold" TextColor="#2c2f30" HorizontalOptions="Center" Margin="0,0,0,4" />
+                    <Label Text="guest@gmail.com" FontSize="14" FontAttributes="Bold" TextColor="#595c5d" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- Stats Grid -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16" Margin="0,0,0,40">
+                    <!-- Stat 1 -->
+                    <Border Grid.Column="0" BackgroundColor="#ffffff" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16,20">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.05" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                            <Label Text="12" FontSize="24" FontAttributes="Bold" TextColor="#376454" HorizontalOptions="Center" />
+                            <Label Text="TOURS" FontSize="10" FontAttributes="Bold" TextColor="#595c5d" CharacterSpacing="1" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <!-- Stat 2 -->
+                    <Border Grid.Column="1" BackgroundColor="#ffffff" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16,20">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.05" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                            <Label Text="45" FontSize="24" FontAttributes="Bold" TextColor="#376454" HorizontalOptions="Center" />
+                            <Label Text="PLACES" FontSize="10" FontAttributes="Bold" TextColor="#595c5d" CharacterSpacing="1" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <!-- Stat 3 -->
+                    <Border Grid.Column="2" BackgroundColor="#ffffff" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16,20">
+                        <Border.Shadow>
+                            <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.05" />
+                        </Border.Shadow>
+                        <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                            <Label Text="8" FontSize="24" FontAttributes="Bold" TextColor="#376454" HorizontalOptions="Center" />
+                            <Label Text="REVIEWS" FontSize="10" FontAttributes="Bold" TextColor="#595c5d" CharacterSpacing="1" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <!-- Settings List -->
+                <VerticalStackLayout Spacing="12" Margin="0,0,0,40">
+                    <!-- Chỉnh sửa hồ sơ -->
+                    <Border BackgroundColor="#ffffff" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="20">
+                        <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                            <Border Grid.Column="0" BackgroundColor="#4Db7e7d2" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" Margin="0,0,16,0">
+                                <Label Text="✏️" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Grid.Column="1" Text="Chỉnh sửa hồ sơ" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
+                            <Label Grid.Column="2" Text="❯" FontSize="14" TextColor="#abadae" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Phương thức thanh toán -->
+                    <Border BackgroundColor="#ffffff" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="20">
+                        <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                            <Border Grid.Column="0" BackgroundColor="#4Db7e7d2" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" Margin="0,0,16,0">
+                                <Label Text="💳" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Grid.Column="1" Text="Phương thức thanh toán" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
+                            <Label Grid.Column="2" Text="❯" FontSize="14" TextColor="#abadae" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Lịch sử chuyến đi -->
+                    <Border BackgroundColor="#ffffff" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="20">
+                        <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                            <Border Grid.Column="0" BackgroundColor="#4Db7e7d2" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" Margin="0,0,16,0">
+                                <Label Text="⏱️" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Grid.Column="1" Text="Lịch sử chuyến đi" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
+                            <Label Grid.Column="2" Text="❯" FontSize="14" TextColor="#abadae" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Cài đặt -->
+                    <Border BackgroundColor="#ffffff" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="20">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="CaiDat_Tapped" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                            <Border Grid.Column="0" BackgroundColor="#4Db7e7d2" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" Margin="0,0,16,0">
+                                <Label Text="⚙️" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Grid.Column="1" Text="Cài đặt" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
+                            <Label x:Name="CaiDatArrow" Grid.Column="2" Text="❯" FontSize="14" TextColor="#abadae" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Sub-menu Cài đặt -->
+                    <VerticalStackLayout x:Name="CaiDatSubMenu" IsVisible="False" Spacing="8" Margin="20,4,0,0">
+
+                        <!-- Chọn giọng đọc TTS -->
+                        <Border BackgroundColor="#ffffff" StrokeThickness="1" Stroke="#E8E8E8" StrokeShape="RoundRectangle 14" Padding="16">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="TTSVoice_Tapped" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                                <Border Grid.Column="0" BackgroundColor="#4D6942bd" StrokeThickness="0" StrokeShape="RoundRectangle 16" WidthRequest="36" HeightRequest="36" Margin="0,0,12,0">
+                                    <Label Text="🗣️" FontSize="14" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                    <Label Text="Ngôn ngữ thuyết minh" FontSize="13" FontAttributes="Bold" TextColor="#2c2f30" />
+                                    <Label Text="Việt · English · 한국어 · 中文" FontSize="11" TextColor="#8a8d8e" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2" Text="❯" FontSize="12" TextColor="#abadae" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Cài đặt độ nhạy GPS -->
+                        <Border BackgroundColor="#ffffff" StrokeThickness="1" Stroke="#E8E8E8" StrokeShape="RoundRectangle 14" Padding="16">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="GPSSensitivity_Tapped" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                                <Border Grid.Column="0" BackgroundColor="#4D376454" StrokeThickness="0" StrokeShape="RoundRectangle 16" WidthRequest="36" HeightRequest="36" Margin="0,0,12,0">
+                                    <Label Text="📍" FontSize="14" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                    <Label Text="Cài đặt độ nhạy GPS" FontSize="13" FontAttributes="Bold" TextColor="#2c2f30" />
+                                    <Label Text="Bán kính kích hoạt điểm tham quan" FontSize="11" TextColor="#8a8d8e" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2" Text="❯" FontSize="12" TextColor="#abadae" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Quản lý tải gói dữ liệu Offline -->
+                        <Border BackgroundColor="#ffffff" StrokeThickness="1" Stroke="#E8E8E8" StrokeShape="RoundRectangle 14" Padding="16">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OfflineData_Tapped" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                                <Border Grid.Column="0" BackgroundColor="#4Db31b25" StrokeThickness="0" StrokeShape="RoundRectangle 16" WidthRequest="36" HeightRequest="36" Margin="0,0,12,0">
+                                    <Label Text="📦" FontSize="14" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                    <Label Text="Quản lý dữ liệu Offline" FontSize="13" FontAttributes="Bold" TextColor="#2c2f30" />
+                                    <Label Text="Tải và quản lý gói dữ liệu ngoại tuyến" FontSize="11" TextColor="#8a8d8e" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2" Text="❯" FontSize="12" TextColor="#abadae" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+
+                    </VerticalStackLayout>
+
+                    <!-- Trung tâm trợ giúp -->
+                    <Border BackgroundColor="#ffffff" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="20">
+                        <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                            <Border Grid.Column="0" BackgroundColor="#4Db7e7d2" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" Margin="0,0,16,0">
+                                <Label Text="❓" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Grid.Column="1" Text="Trung tâm trợ giúp" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
+                            <Label Grid.Column="2" Text="❯" FontSize="14" TextColor="#abadae" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Sign Out Button -->
+                <Border BackgroundColor="#0Db31b25" StrokeThickness="0" StrokeShape="RoundRectangle 28" HeightRequest="56" Margin="0,0,0,40">
+                    <HorizontalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="8">
+                        <Label Text="🚪" FontSize="16" VerticalOptions="Center" />
+                        <Label Text="Đăng xuất" TextColor="#b31b25" FontSize="16" FontAttributes="Bold" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="DangXuat_Tapped" />
+                    </Border.GestureRecognizers>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- TopAppBar -->
+        <Border ZIndex="5" VerticalOptions="Start" HorizontalOptions="Fill" BackgroundColor="#E6FFFFFF"
+                StrokeThickness="0" HeightRequest="64">
+            <Border.Shadow>
+                <Shadow Brush="#064E3B" Offset="0,2" Radius="8" Opacity="0.05" />
+            </Border.Shadow>
+            <Grid Padding="24,0" ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                <HorizontalStackLayout Grid.Column="0" Spacing="16" VerticalOptions="Center">
+                    <Label Text="Taste Tour App" FontSize="20" FontAttributes="Bold" TextColor="#064E3B" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+                
+                <Border Grid.Column="2" BackgroundColor="#20b7e7d2" Stroke="#b7e7d2" StrokeThickness="2" StrokeShape="RoundRectangle 20"
+                        WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                    <Label Text="👤" FontSize="18" TextColor="#376454" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ===== LAYER 4: NAVIGATION BAR ===== -->
+        <Border ZIndex="4" VerticalOptions="End" HorizontalOptions="Fill" BackgroundColor="#CCFFFFFF"
+                StrokeShape="RoundRectangle 40,40,0,0" StrokeThickness="0"
+                Padding="24">
+            <Border.Shadow>
+                <Shadow Brush="#2E5B4B" Offset="0,-8" Radius="24" Opacity="0.08" />
+            </Border.Shadow>
+
+            <Grid ColumnDefinitions="*,*,*,*">
+
+                <!-- Explore -->
+                <VerticalStackLayout Grid.Column="0"
+                                     Padding="20,8"
+                                     HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="EXPLORE" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5"
+                           TextColor="#80065F46" HorizontalOptions="Center" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="NavExplore_Tapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+
+                <!-- Tours -->
+                <VerticalStackLayout Grid.Column="1"
+                                     Padding="20,8"
+                                     HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="TOURS" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5"
+                           TextColor="#80065F46" HorizontalOptions="Center" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="NavTours_Tapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+
+                <!-- Saved -->
+                <VerticalStackLayout Grid.Column="2"
+                                     Padding="20,8"
+                                     HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="SAVED" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5"
+                           TextColor="#80065F46" HorizontalOptions="Center" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="NavSaved_Tapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+
+                <!-- Profile (Active) -->
+                <Border Grid.Column="3"
+                        BackgroundColor="#D1FAE5"
+                        StrokeShape="RoundRectangle 20"
+                        StrokeThickness="0"
+                        Padding="20,8"
+                        Scale="1.1"
+                        HorizontalOptions="Center" VerticalOptions="Center">
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center">
+                        <Label Text="PROFILE" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5"
+                               TextColor="#064E3B" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Border>
+
+            </Grid>
+        </Border>
+
+    </Grid>
+</ContentPage>
