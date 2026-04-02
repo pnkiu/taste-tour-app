@@ -1,0 +1,178 @@
+﻿@model TravelGuide.Web.Models.Tour
+
+@{
+    ViewData["Title"] = "Thiết kế Lộ trình VIP";
+}
+
+<style>
+    #sortable-route .list-group-item { border: none; border-left: 4px solid #1cc88a; margin-bottom: 10px; border-radius: 0.35rem; transition: all 0.2s; }
+    #sortable-route .list-group-item:hover { transform: translateX(5px); box-shadow: 0 .15rem 1.75rem 0 rgba(58,59,69,.15) !important; }
+    .drag-handle { cursor: grab; font-size: 1.5rem; color: #b7b9cc; transition: color 0.2s; }
+    .drag-handle:hover { color: #1cc88a; }
+    .drag-handle:active { cursor: grabbing; }
+    .sortable-ghost { opacity: 0.5; background-color: #e3f2fd !important; border: 2px dashed #4e73df !important; }
+</style>
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Thiết kế lộ trình: <span class="text-primary font-weight-bold">@Model.Name</span></h1>
+    <a asp-action="Index" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left fa-sm text-white-50"></i> Quay lại
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4 mb-xl-0">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body py-1">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng điểm dừng</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.CurrentPOIs.Count điểm</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-map-marker-alt fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-4 col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3 bg-gradient-light d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-secondary"><i class="fas fa-store"></i> Kho Địa Điểm</h6>
+                <span class="badge badge-secondary">@ViewBag.AvailablePOIs.Count quán</span>
+            </div>
+            <div class="px-3 py-2 bg-light border-bottom">
+                <input type="text" id="searchPoi" class="form-control form-control-sm" placeholder="🔍 Nhập tên quán để tìm nhanh...">
+            </div>
+            <div class="card-body" style="max-height: 550px; overflow-y: auto;">
+                <ul class="list-group list-group-flush" id="available-poi-list">
+                    @foreach (var poi in ViewBag.AvailablePOIs)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div class="d-flex align-items-center">
+                                @if(!string.IsNullOrEmpty(poi.ImageUrl)){
+                                    <img src="@poi.ImageUrl" style="width: 45px; height: 45px; border-radius: 8px; object-fit: cover;" class="mr-3 shadow-sm"/>
+                                } else {
+                                    <div class="bg-gray-300 mr-3 rounded" style="width: 45px; height: 45px; display:flex; align-items:center; justify-content:center;"><i class="fas fa-image text-white"></i></div>
+                                }
+                                <div>
+                                    <h6 class="mb-0 font-weight-bold text-dark" style="font-size: 14px;">@poi.Name</h6>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-success btn-add-poi" data-tourid="@Model.Id" data-poiid="@poi.Id" title="Thêm vào lộ trình">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-6 mb-4">
+        <div class="card shadow border-left-success h-100">
+            <div class="card-header py-3 bg-success d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-white"><i class="fas fa-route"></i> Lộ Trình (Kéo Thả)</h6>
+                <div>
+                    @if(ViewBag.CurrentPOIs.Count > 2) {
+                        <button id="btnOptimize" class="btn btn-sm btn-warning text-dark font-weight-bold shadow-sm mr-2" data-tourid="@Model.Id" title="Sắp xếp đường đi ngắn nhất">
+                            <i class="fas fa-magic"></i> Tối ưu
+                        </button>
+                    }
+                    <button id="btnSaveOrder" class="btn btn-sm btn-light text-success font-weight-bold shadow-sm" style="display:none;"><i class="fas fa-save"></i> Lưu</button>
+                </div>
+            </div>
+            <div class="card-body bg-gray-100" style="max-height: 600px; overflow-y: auto;">
+                <ul class="list-group" id="sortable-route">
+                    @foreach (var tp in ViewBag.CurrentPOIs)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center shadow-sm" 
+                            data-id="@tp.Id" data-lat="@tp.POI.Latitude" data-lng="@tp.POI.Longitude" data-name="@tp.POI.Name">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-grip-vertical mr-3 drag-handle"></i>
+                                <span class="badge badge-success badge-pill mr-3" style="font-size: 14px; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center;">@tp.OrderIndex</span>
+                                <div>
+                                    <h6 class="mb-0 font-weight-bold text-dark">@tp.POI.Name</h6>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger btn-remove-poi" data-tourpoiid="@tp.Id" title="Xóa khỏi Tour">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-12 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-map"></i> Bản đồ Tuyến đường</h6></div>
+            <div class="card-body p-0">
+                <div id="routeMap" style="height: 100%; min-height: 500px; width: 100%; border-bottom-left-radius: 0.35rem; border-bottom-right-radius: 0.35rem;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            
+            // --- XỬ LÝ TÌM KIẾM NHANH (LIVE SEARCH) ---
+            $('#searchPoi').on('keyup', function() {
+                var value = $(this).val().toLowerCase();
+                $('#available-poi-list li').filter(function() {
+                    $(this).toggle($(this).find('h6').text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+
+            // --- XỬ LÝ NÚT TỐI ƯU HÓA ---
+            $('#btnOptimize').click(function () {
+                var btn = $(this);
+                btn.html('<i class="fas fa-spinner fa-spin"></i> Đang tính...');
+                $.post('/Tours/OptimizeRoute', { tourId: btn.data('tourid') }, function (res) {
+                    if (res.success) location.reload(); // Xong thì tải lại trang để thấy kết quả
+                });
+            });
+
+            // Bản đồ và Kéo thả (Giữ nguyên như cũ)
+            var map = L.map('routeMap').setView([10.762622, 106.660172], 14); 
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            var routeCoords = [];
+            $('#sortable-route li').each(function(index) {
+                var lat = parseFloat($(this).data('lat'));
+                var lng = parseFloat($(this).data('lng'));
+                var name = $(this).data('name');
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    routeCoords.push([lat, lng]);
+                    var icon = L.divIcon({ className: 'custom-div-icon', html: `<div style='background:#1cc88a;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-weight:bold;border:2px solid white;'>${index + 1}</div>`, iconSize: [30, 30] });
+                    L.marker([lat, lng], {icon: icon}).addTo(map).bindPopup(`<b>Điểm ${index + 1}:</b> ${name}`);
+                }
+            });
+
+            if (routeCoords.length > 1) {
+                var polyline = L.polyline(routeCoords, {color: '#1cc88a', weight: 4, dashArray: '10, 10'}).addTo(map);
+                map.fitBounds(polyline.getBounds(), {padding: [50, 50]});
+            } else if (routeCoords.length === 1) map.setView(routeCoords[0], 16);
+
+            var el = document.getElementById('sortable-route');
+            if(el) Sortable.create(el, { handle: '.drag-handle', animation: 200, ghostClass: 'sortable-ghost', onEnd: function () { $('#btnSaveOrder').fadeIn(); }});
+
+            $('.btn-add-poi').click(function () { $.post('/Tours/AddPoiToTour', { tourId: $(this).data('tourid'), poiId: $(this).data('poiid') }, function (res) { if(res.success) location.reload(); }); });
+            $('.btn-remove-poi').click(function () { if (confirm('Xóa khỏi lộ trình?')) $.post('/Tours/RemovePoiFromTour', { tourPoiId: $(this).data('tourpoiid') }, function (res) { if(res.success) location.reload(); }); });
+            $('#btnSaveOrder').click(function () {
+                var ids = [];
+                $('#sortable-route li').each(function () { ids.push($(this).data('id')); });
+                $.ajax({ url: '/Tours/UpdateOrder', type: 'POST', contentType: 'application/json', data: JSON.stringify(ids), success: function (res) { if (res.success) location.reload(); } });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,51 @@
+﻿@model TravelGuide.Web.Models.Audio
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>Audio</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <<form asp-action="Create" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Title" class="control-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FileUrl" class="control-label font-weight-bold">Tải file MP3 lên</label>
+                <input type="file" name="audioFile" class="form-control-file" accept="audio/mpeg, audio/wav" required />
+                <span asp-validation-for="FileUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Language" class="control-label font-weight-bold">Ngôn ngữ thuyết minh</label>
+                <select asp-for="Language" class="form-control">
+                    <option value="VN">Tiếng Việt (VN)</option>
+                    <option value="EN">Tiếng Anh (EN)</option>
+                    <option value="CN">Tiếng Trung (CN)</option>
+                </select>
+                <span asp-validation-for="Language" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PoiId" class="control-label"></label>
+                <select asp-for="PoiId" class ="form-control" asp-items="ViewBag.PoiId"></select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

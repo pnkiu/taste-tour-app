@@ -1,0 +1,77 @@
+﻿@model TravelGuide.Web.Models.Tour
+
+@{
+    ViewData["Title"] = "Chi tiết Hành trình";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Chi tiết: <span class="text-primary font-weight-bold">@Model.Name</span></h1>
+    <div>
+        <a asp-action="ManageRoute" asp-route-id="@Model.Id" class="d-none d-sm-inline-block btn btn-sm btn-success shadow-sm mr-2">
+            <i class="fas fa-map-signs fa-sm text-white-50"></i> Thiết kế Lộ trình
+        </a>
+        <a asp-action="Index" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Quay lại
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4 border-bottom-info">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-info"><i class="fas fa-info-circle"></i> Thông tin Hành trình</h6>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm shadow-sm">
+                    <i class="fas fa-edit"></i> Sửa thông tin
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3 align-items-center">
+                    <div class="col-md-4 font-weight-bold text-dark">Tên Hành trình:</div>
+                    <div class="col-md-8 text-primary font-weight-bold" style="font-size: 1.1rem;">@Model.Name</div>
+                </div>
+                <hr>
+                <div class="row mb-3">
+                    <div class="col-md-4 font-weight-bold text-dark">Mô tả hấp dẫn:</div>
+                    <div class="col-md-8 text-justify text-muted">
+                        @(string.IsNullOrEmpty(Model.Description) ? "Chưa có đoạn mô tả nào cho hành trình này." : Model.Description)
+                    </div>
+                </div>
+                <hr>
+                <div class="row mb-3 align-items-center">
+                    <div class="col-md-4 font-weight-bold text-dark"><i class="fas fa-clock text-primary mr-1"></i> Thời gian dự kiến:</div>
+                    <div class="col-md-8">
+                        <span class="badge badge-primary px-3 py-2" style="font-size: 0.9rem;">@(string.IsNullOrEmpty(Model.Duration) ? "Chưa xác định" : Model.Duration)</span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row mb-3 align-items-center">
+                    <div class="col-md-4 font-weight-bold text-dark"><i class="fas fa-route text-success mr-1"></i> Tổng quãng đường:</div>
+                    <div class="col-md-8">
+                        <span class="badge badge-success px-3 py-2" style="font-size: 0.9rem;">@(string.IsNullOrEmpty(Model.Distance) ? "Chưa xác định" : Model.Distance)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success"><i class="fas fa-image"></i> Ảnh bìa</h6>
+            </div>
+            <div class="card-body text-center bg-gray-100">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl" alt="Cover Image" class="img-fluid rounded shadow-sm mb-3" style="max-height: 300px; width: 100%; object-fit: cover; border: 3px solid white;" />
+                    <a href="@Model.ImageUrl" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-external-link-alt"></i> Xem ảnh gốc HD</a>
+                }
+                else
+                {
+                    <img src="https://via.placeholder.com/400x300?text=Chua+co+anh" alt="No Image" class="img-fluid rounded shadow-sm mb-3" style="max-height: 300px; width: 100%; object-fit: cover; border: 3px solid white;" />
+                    <p class="text-muted small mb-0"><i class="fas fa-exclamation-triangle text-warning"></i> Hành trình này chưa được cập nhật ảnh bìa.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TravelGuide.Web.Models 
+namespace TravelGuide.Web.Models
 {
     public class POI
     {
@@ -38,5 +38,9 @@ namespace TravelGuide.Web.Models
 
         [Display(Name = "Link bản đồ")]
         public string? MapLink { get; set; }
+
+        // Mối quan hệ: 1 POI có thể nằm trong nhiều Hành trình (Tour)
+        // ĐÃ ĐƯỢC ĐƯA VÀO ĐÚNG BÊN TRONG CLASS POI
+        public virtual ICollection<TourPOI>? TourPOIs { get; set; }
     }
 }

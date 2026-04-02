@@ -1,0 +1,128 @@
+﻿@model TravelGuide.Web.Models.POI
+
+@{
+    ViewData["Title"] = "Thêm mới POI";
+}
+
+<h1 class="h3 mb-2 text-gray-800">Thêm Điểm thuyết minh mới</h1>
+<p class="mb-4">Nhập thông tin địa điểm và click vào bản đồ để lấy tọa độ Geofence tự động.</p>
+
+<div class="row">
+    <div class="col-xl-5 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Thông tin địa điểm</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Name" class="control-label font-weight-bold"></label>
+                        <input asp-for="Name" class="form-control" placeholder="VD: Quán Ốc Oanh..." />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Description" class="control-label font-weight-bold"></label>
+                        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Latitude" class="control-label font-weight-bold"></label>
+                            <input asp-for="Latitude" id="latInput" class="form-control bg-light" readonly placeholder="Click bản đồ" />
+                            <span asp-validation-for="Latitude" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Longitude" class="control-label font-weight-bold"></label>
+                            <input asp-for="Longitude" id="lngInput" class="form-control bg-light" readonly placeholder="Click bản đồ" />
+                            <span asp-validation-for="Longitude" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Radius" class="control-label font-weight-bold"></label>
+                            <div class="input-group">
+                                <input asp-for="Radius" class="form-control" />
+                                <div class="input-group-append">
+                                    <span class="input-group-text">mét</span>
+                                </div>
+                            </div>
+                            <span asp-validation-for="Radius" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Priority" class="control-label font-weight-bold"></label>
+                            <input asp-for="Priority" class="form-control" />
+                            <span asp-validation-for="Priority" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <input type="submit" value="Lưu địa điểm" class="btn btn-primary" />
+                        <a asp-action="Index" class="btn btn-secondary ml-2">Hủy / Quay lại</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-7 col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-success"><i class="fas fa-map-marked-alt"></i> Bản đồ định vị</h6>
+                <small class="text-muted">Phóng to và Click để chọn điểm</small>
+            </div>
+            <div class="card-body p-1">
+                <div id="map" style="height: 500px; width: 100%; border-radius: 0.35rem;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        $(document).ready(function() {
+        // Tọa độ khu vực Quận 4 (Gần Vĩnh Khánh) làm mặc định
+        var initialLat = 10.760111;
+        var initialLng = 106.700465;
+            
+        // Khởi tạo bản đồ, zoom level 16
+        var map = L.map('map').setView([initialLat, initialLng], 16);
+            
+        // Dùng lớp bản đồ miễn phí của OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+
+        var marker;
+
+        // Sự kiện khi click vào bản đồ
+        map.on('click', function(e) {
+        var lat = e.latlng.lat.toFixed(6);
+        var lng = e.latlng.lng.toFixed(6);
+
+        // 1. Đẩy tọa độ vào 2 ô Input bên trái
+        $('#latInput').val(lat);
+        $('#lngInput').val(lng);
+
+        // 2. Xóa ghim cũ (nếu có) và cắm ghim mới
+        if(marker) {
+        map.removeLayer(marker);
+        }
+        marker = L.marker([lat, lng]).addTo(map)
+        .bindPopup("Đã chọn tọa độ:<br><b>" + lat + ", " + lng + "</b>").openPopup();
+        });
+        });
+    </script>
+}
