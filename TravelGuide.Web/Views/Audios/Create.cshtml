@@ -1,51 +1,73 @@
 ﻿@model TravelGuide.Web.Models.Audio
-
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Thêm file Audio mới";
 }
 
-<h1>Create</h1>
+<div class="container mt-4">
+    <div class="card shadow border-0" style="max-width: 800px; margin: auto;">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="m-0 font-weight-bold"><i class="fas fa-cloud-upload-alt"></i> Tải lên file Thuyết minh MP3</h5>
+        </div>
+        <div class="card-body p-4">
+            <form asp-action="Create" enctype="multipart/form-data">
+                
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold">Tiêu đề Audio</label>
+                    <input asp-for="Title" class="form-control form-control-lg" placeholder="Nhập tiêu đề (VD: Thuyết minh Quán ốc L...)" required />
+                </div>
 
-<h4>Audio</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <<form asp-action="Create" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Title" class="control-label"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FileUrl" class="control-label font-weight-bold">Tải file MP3 lên</label>
-                <input type="file" name="audioFile" class="form-control-file" accept="audio/mpeg, audio/wav" required />
-                <span asp-validation-for="FileUrl" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Language" class="control-label font-weight-bold">Ngôn ngữ thuyết minh</label>
-                <select asp-for="Language" class="form-control">
-                    <option value="VN">Tiếng Việt (VN)</option>
-                    <option value="EN">Tiếng Anh (EN)</option>
-                    <option value="CN">Tiếng Trung (CN)</option>
-                </select>
-                <span asp-validation-for="Language" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PoiId" class="control-label"></label>
-                <select asp-for="PoiId" class ="form-control" asp-items="ViewBag.PoiId"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+                <div class="row mb-4">
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-bold">Thuộc Địa điểm (POI)</label>
+                        <select asp-for="PoiId" class="form-control" asp-items="ViewBag.PoiId"></select>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="font-weight-bold">Ngôn ngữ</label>
+                        <select asp-for="Language" class="form-control">
+                            <option value="Tiếng Việt (VN)">Tiếng Việt (VN)</option>
+                            <option value="English (EN)">English (EN)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="font-weight-bold">File Âm thanh (Chỉ nhận .mp3)</label>
+                    <div id="drop-zone" style="border: 2px dashed #4e73df; border-radius: 10px; padding: 40px; text-align: center; background-color: #f8f9fc; cursor: pointer; transition: 0.3s;">
+                        <i class="fas fa-file-audio fa-4x text-primary mb-3"></i>
+                        <h5>Bấm vào đây để chọn file MP3 từ máy tính</h5>
+                        <p class="text-muted mb-0" id="file-name-display">Chưa có tệp nào được chọn</p>
+                        
+                        <input type="file" name="audioUpload" id="audioUpload" class="d-none" accept=".mp3,audio/*" required />
+                    </div>
+                </div>
+
+                <hr />
+                <div class="d-flex justify-content-between mt-3">
+                    <a asp-action="Index" class="btn btn-secondary btn-lg"><i class="fas fa-arrow-left"></i> Quay lại</a>
+                    <button type="submit" class="btn btn-success btn-lg"><i class="fas fa-save"></i> Lưu thông tin</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Khi click vào khung đứt nét, tự động kích hoạt cái nút chọn file ẩn
+        document.getElementById('drop-zone').addEventListener('click', function() {
+            document.getElementById('audioUpload').click();
+        });
+
+        // Khi người dùng đã chọn file xong, đổi dòng chữ để báo hiệu
+        document.getElementById('audioUpload').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                var fileName = e.target.files[0].name;
+                // Hiện tên file màu xanh lá
+                document.getElementById('file-name-display').innerHTML = '<strong class="text-success"><i class="fas fa-check-circle"></i> Đã chọn: ' + fileName + '</strong>';
+                // Đổi viền cái hộp sang màu xanh lá luôn cho đồng bộ
+                document.getElementById('drop-zone').style.borderColor = '#1cc88a';
+                document.getElementById('drop-zone').style.backgroundColor = '#e3fceb';
+            }
+        });
+    </script>
 }

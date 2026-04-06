@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO; // Thư viện xử lý File/Thư mục
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization; // Thư viện ổ khóa
+using Microsoft.AspNetCore.Hosting; // Thư viện môi trường (lưu file)
+using Microsoft.AspNetCore.Http; // Thư viện IFormFile
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -55,29 +59,37 @@ namespace TravelGuide.Web.Controllers
         }
 
         // POST: Audios/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Language,PoiId")] Audio audio, IFormFile? audioFile)
+        // ĐÃ SỬA: Dùng IFormFile audioUpload để khớp với giao diện View
+        public async Task<IActionResult> Create([Bind("Id,Title,Language,PoiId")] Audio audio, IFormFile? audioUpload)
         {
             if (ModelState.IsValid)
             {
                 // Kiểm tra xem người dùng có chọn file MP3 không
-                if (audioFile != null && audioFile.Length > 0)
+                if (audioUpload != null && audioUpload.Length > 0)
                 {
                     // Tạo tên file độc nhất (tránh bị trùng tên file cũ)
-                    string extension = Path.GetExtension(audioFile.FileName);
+                    string extension = Path.GetExtension(audioUpload.FileName);
                     string newFileName = Guid.NewGuid().ToString() + extension;
 
-                    //  Lấy đường dẫn tới thư mục wwwroot/audios
+                    // Lấy đường dẫn tới thư mục wwwroot/audios
                     string wwwRootPath = _hostEnvironment.WebRootPath;
-                    string path = Path.Combine(wwwRootPath, "audios", newFileName);
+                    string folderPath = Path.Combine(wwwRootPath, "audios");
+
+                    // ĐÃ THÊM: Kiểm tra và tạo thư mục nếu chưa có (Tránh lỗi sập web)
+                    if (!Directory.Exists(folderPath))
+                    {
+                        Directory.CreateDirectory(folderPath);
+                    }
+
+                    // Nối đường dẫn thư mục với tên file
+                    string path = Path.Combine(folderPath, newFileName);
 
                     // Copy file từ Form lên ổ cứng Server
                     using (var fileStream = new FileStream(path, FileMode.Create))
                     {
-                        await audioFile.CopyToAsync(fileStream);
+                        await audioUpload.CopyToAsync(fileStream);
                     }
 
                     // Lưu đường dẫn tương đối vào Database (để App Mobile dễ gọi)
@@ -90,7 +102,6 @@ namespace TravelGuide.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-        
             ViewData["PoiId"] = new SelectList(_context.POIs, "Id", "Name", audio.PoiId);
             return View(audio);
         }
@@ -113,8 +124,6 @@ namespace TravelGuide.Web.Controllers
         }
 
         // POST: Audios/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,FileUrl,Language,PoiId")] Audio audio)
@@ -175,6 +184,7 @@ namespace TravelGuide.Web.Controllers
             var audio = await _context.Audios.FindAsync(id);
             if (audio != null)
             {
+                // Nếu muốn xịn hơn, sau này có thể viết thêm code xóa luôn file MP3 vật lý trong wwwroot ở đây
                 _context.Audios.Remove(audio);
             }
 

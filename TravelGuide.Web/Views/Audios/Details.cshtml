@@ -1,42 +1,139 @@
 ﻿@model TravelGuide.Web.Models.Audio
-
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Hồ sơ Audio";
 }
 
-<h1>Details</h1>
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0" style="border-radius: 25px; background: #fff;">
+                <div class="py-2 bg-info" style="border-radius: 25px 25px 0 0;"></div>
+                
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <div class="mb-4 d-inline-block p-4 rounded-circle bg-light" style="box-shadow: 0 10px 30px rgba(54, 185, 204, 0.1);">
+                            <i class="fas fa-microphone-alt fa-4x text-info"></i>
+                        </div>
+                        <h2 class="font-weight-bold text-dark mb-2">@Model.Title</h2>
+                        
+                        @if (Model.Language == "Tiếng Việt (VN)")
+                        {
+                            <span class="badge badge-success px-4 py-2 mt-2 h6" style="background: linear-gradient(45deg, #1cc88a, #13855c);">Tiếng Việt (VN)</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-primary px-4 py-2 mt-2 h6" style="background: linear-gradient(45deg, #4e73df, #224abe);">@Model.Language</span>
+                        }
+                    </div>
 
-<div>
-    <h4>Audio</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Title)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FileUrl)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FileUrl)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Language)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Language)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.POI)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.POI.Name)
-        </dd>
-    </dl>
+                    <div class="mb-5 p-4 rounded-lg text-center shadow-sm" style="background-color: #f8f9fc; border-radius: 20px; border: 1px solid #eaecf4;">
+                        <h6 class="font-weight-bold text-muted mb-4 text-uppercase" style="letter-spacing: 2px;"><i class="fas fa-wave-square"></i> Trình phát thông minh</h6>
+                        
+                        @if (!string.IsNullOrEmpty(Model.FileUrl))
+                        {
+                            <div class="d-flex align-items-center justify-content-center mb-3">
+                                <button id="btnPlayPause" class="btn btn-info rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 60px; height: 60px; transition: 0.3s;">
+                                    <i class="fas fa-play fa-2x text-white" style="margin-left: 4px;" id="playIcon"></i>
+                                </button>
+                            </div>
+
+                            <div id="waveform" class="w-100 mt-3"></div>
+                            
+                            <div class="d-flex justify-content-between mt-2 text-muted small font-weight-bold">
+                                <span id="time-current">0:00</span>
+                                <span id="time-total">0:00</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-danger rounded-pill">
+                                <i class="fas fa-times-circle mr-2"></i>Không có dữ liệu âm thanh
+                            </div>
+                        }
+                    </div>
+
+                    <div class="list-group list-group-flush mb-4 rounded-lg overflow-hidden border">
+                        <div class="list-group-item bg-light text-dark h6 m-0 px-4 py-3 d-flex justify-content-between align-items-center">
+                            <strong><i class="fas fa-map-marker-alt text-info mr-2"></i>Thuộc địa điểm:</strong>
+                            <span class="font-weight-bold text-primary" style="font-size: 1.1rem;">@Model.POI?.Name</span>
+                        </div>
+                        <div class="list-group-item bg-white px-4 py-3 d-flex justify-content-between align-items-center">
+                            <strong><i class="fas fa-link text-muted mr-2"></i>Đường dẫn hệ thống:</strong>
+                            <span class="text-break text-muted small p-2 rounded bg-light border">@Model.FileUrl</span>
+                        </div>
+                    </div>
+
+                    <hr style="border-top: 2px dashed #e1e5eb;" />
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-secondary btn-lg" style="opacity: 0.8;">
+                            <i class="fas fa-arrow-left mr-2"></i>Quay lại danh sách
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-lg text-dark font-weight-bold" style="background: linear-gradient(45deg, #f6c23e, #f4b400); border: none;">
+                            <i class="fas fa-edit mr-2"></i>Chỉnh sửa hồ sơ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+        var fileUrl = '@Model.FileUrl';
+            
+        if (fileUrl) {
+        // Khởi tạo máy phát Sóng âm
+        const wavesurfer = WaveSurfer.create({
+        container: '#waveform',
+        waveColor: '#b7b9cc',      // Màu sóng khi chưa nghe tới
+        progressColor: '#36b9cc',  // Màu sóng khi đã chạy qua (Màu xanh Info)
+        barWidth: 3,               // Độ dày của từng cột sóng
+        barGap: 2,                 // Khoảng cách giữa các cột
+        barRadius: 3,              // Bo tròn cột sóng
+        height: 80,                // Chiều cao khung
+        url: fileUrl               // Truyền link MP3 vào
+        });
+
+        // Format thời gian từ Giây -> Phút:Giây (VD: 65s -> 1:05)
+        const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        };
+
+        // Khi tải xong file MP3 -> Hiển thị tổng thời gian
+        wavesurfer.on('ready', function () {
+        $('#time-total').text(formatTime(wavesurfer.getDuration()));
+        });
+
+        // Khi đang phát nhạc -> Cập nhật thời gian hiện tại liên tục
+        wavesurfer.on('audioprocess', function () {
+        $('#time-current').text(formatTime(wavesurfer.getCurrentTime()));
+        });
+                
+        // Cập nhật khi người dùng tua nhạc
+        wavesurfer.on('seeking', function () {
+        $('#time-current').text(formatTime(wavesurfer.getCurrentTime()));
+        });
+
+        // Xử lý nút Play / Pause Custom
+        $('#btnPlayPause').click(function () {
+        wavesurfer.playPause();
+        });
+
+        // Đổi icon Play <-> Pause khi trạng thái thay đổi
+        wavesurfer.on('play', function () {
+        $('#playIcon').removeClass('fa-play').addClass('fa-pause').css('margin-left', '0');
+        });
+        wavesurfer.on('pause', function () {
+        $('#playIcon').removeClass('fa-pause').addClass('fa-play').css('margin-left', '4px');
+        });
+        }
+        });
+    </script>
+}
