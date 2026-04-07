@@ -1,11 +1,13 @@
 using TasteTourApp.Models;
 using TasteTourApp.Services;
+using TasteTourApp.Services.Geofence;
 
 namespace TasteTourApp.Views;
 
 public partial class MainPage : ContentPage
 {
-    private DatabaseService _dbService = new DatabaseService();
+    private readonly DatabaseService _dbService;
+    private readonly GeofenceEngine _geofenceEngine;
     private List<QuanAn> _danhSachQuan = new();
     private QuanAn? _quanDangChon = null;
     private bool _sheetDangMo = false;
@@ -230,15 +232,56 @@ public partial class MainPage : ContentPage
     // ============================================================
     //  CONSTRUCTOR
     // ============================================================
-    public MainPage()
+    public MainPage(DatabaseService dbService, GeofenceEngine geofenceEngine)
     {
         InitializeComponent();
+
+        _dbService = dbService;
+        _geofenceEngine = geofenceEngine;
+
+        // ── Wire GeofenceEngine events ────────────────────────────────
+        _geofenceEngine.PoiTriggered += OnPoiTriggered;
+        _geofenceEngine.NearestPoiChanged += OnNearestPoiChanged;
 
         // FIX: Ẩn sheet ngay khi khởi tạo bằng cách đẩy xuống ngoài màn hình
         TheChiTiet.SizeChanged += OnSheetSizeChanged;
 
         // Set bottom sheet ở peek height ban đầu
         BottomSheetDanhSach.HeightRequest = _sheetMinHeight;
+    }
+
+    // ── GeofenceEngine event handlers ────────────────────────────────
+
+    /// Tự động phát TTS khi người dùng bước vào vùng một quán
+    private async void OnPoiTriggered(object? sender, GeofenceTrigger trigger)
+    {
+        System.Diagnostics.Debug.WriteLine(
+            $"[Geofence] Kích hoạt: {trigger.Quan.TenQuan} ({trigger.DistanceMeters:F0}m)");
+
+        if (_sheetDangMo) return;
+        if (_dangPhatTTS) return;
+
+        _quanDangChon = trigger.Quan;
+        await PhatTts();
+    }
+
+    /// Cập nhật highlight POI gần nhất trên bản đồ
+    private async void OnNearestPoiChanged(object? sender, (string poiId, double distanceMeters) e)
+    {
+        _nearestPoiId = e.poiId;
+        var quan = _danhSachQuan.FirstOrDefault(q => q.Id == e.poiId);
+        if (quan == null) return;
+
+        await MainThread.InvokeOnMainThreadAsync(async () =>
+        {
+            await BanDoWebView.EvaluateJavaScriptAsync($"setNearestMarker(\'{e.poiId}\')");
+            NearestPoiCard.IsVisible = true;
+            LblNearestName.Text = quan.TenQuan;
+            LblNearestDistance.Text = e.distanceMeters < 1000
+                ? $"📍 {e.distanceMeters:F0}m cách bạn"
+                : $"📍 {e.distanceMeters / 1000:F1}km cách bạn";
+            RenderPoiCards(_danhSachQuan);
+        });
     }
 
     private void OnSheetSizeChanged(object? sender, EventArgs e)
@@ -290,7 +333,11 @@ public partial class MainPage : ContentPage
         var lngStr = _userLng.ToString(System.Globalization.CultureInfo.InvariantCulture);
         await BanDoWebView.EvaluateJavaScriptAsync($"setUserLocation({latStr}, {lngStr})");
 
-        // Tìm và highlight POI gần nhất
+        // ── Feed vào GeofenceEngine (thay thế HighlightNearestPoi thủ công) ──
+        _geofenceEngine.Start();
+        _geofenceEngine.OnLocationUpdated(_userLat, _userLng);
+
+        // Vẫn giữ HighlightNearestPoi để UI update ngay lập tức (không chờ debounce)
         await HighlightNearestPoi();
 
         // ── BỎ COMMENT ĐOẠN DƯỚI ĐỂ DÙNG GPS THẬT ──
@@ -631,6 +678,10 @@ public partial class MainPage : ContentPage
         var latStr = _userLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
         var lngStr = _userLng.ToString(System.Globalization.CultureInfo.InvariantCulture);
         await BanDoWebView.EvaluateJavaScriptAsync($"centerOnUser({latStr}, {lngStr})");
+
+        // Reset cooldown để test lại geofence ngay lập tức
+        _geofenceEngine.ResetCooldowns();
+        _geofenceEngine.OnLocationUpdated(_userLat, _userLng);
 
         await HighlightNearestPoi();
     }

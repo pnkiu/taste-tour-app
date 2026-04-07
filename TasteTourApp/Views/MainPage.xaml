@@ -223,7 +223,7 @@
                 <VerticalStackLayout Padding="20,14,20,0" Spacing="0">
 
                     <!-- Tên + rating -->
-                    <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,6">
+                    <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,0,0,6">
                         <Label x:Name="LblTenQuan"
                                Grid.Column="0"
                                Text="Tên Quán Ăn"
@@ -233,6 +233,7 @@
                                LineBreakMode="TailTruncation" />
                         <HorizontalStackLayout Grid.Column="1"
                                                Spacing="3"
+                                               Margin="0,0,12,0"
                                                VerticalOptions="Center">
                             <Label Text="★" FontSize="14" TextColor="#F9A825" VerticalOptions="Center" />
                             <Label x:Name="LblRating"
@@ -242,6 +243,20 @@
                                    TextColor="#1A1A1A"
                                    VerticalOptions="Center" />
                         </HorizontalStackLayout>
+                        
+                        <!-- Nút Yêu thích (Heart) -->
+                        <Border Grid.Column="2" 
+                                BackgroundColor="#B7E7D2"
+                                StrokeShape="RoundRectangle 24"
+                                StrokeThickness="0"
+                                WidthRequest="36" HeightRequest="36"
+                                VerticalOptions="Center">
+                            <Label x:Name="BtnHeartPoi" Text="🤍" FontSize="16" TextColor="#376454" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="BtnHeartPoi_Tapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                        </Border>
                     </Grid>
 
                     <!-- Địa chỉ -->

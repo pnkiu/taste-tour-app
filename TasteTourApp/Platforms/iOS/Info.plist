@@ -28,5 +28,9 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>TasteTour cần vị trí của bạn để tự động thuyết minh các quán ăn gần bạn.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>TasteTour cần vị trí của bạn để tự động thuyết minh các quán ăn gần bạn khi đang đi dạo.</string>
 </dict>
 </plist>
