@@ -40,7 +40,7 @@
                                 <label asp-for="Duration" class="control-label font-weight-bold text-dark">Thời gian dự kiến</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend"><span class="input-group-text bg-light"><i class="fas fa-clock text-primary"></i></span></div>
-                                    <input asp-for="Duration" class="form-control" placeholder="VD: 2 giờ" />
+                                    <input asp-for="Duration" class="form-control" placeholder="VD: 2 giờ" readonly />
                                 </div>
                                 <span asp-validation-for="Duration" class="text-danger"></span>
                             </div>
@@ -50,7 +50,7 @@
                                 <label asp-for="Distance" class="control-label font-weight-bold text-dark">Tổng quãng đường</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend"><span class="input-group-text bg-light"><i class="fas fa-route text-success"></i></span></div>
-                                    <input asp-for="Distance" class="form-control" placeholder="VD: 1.5 km" />
+                                    <input asp-for="Distance" class="form-control" placeholder="VD: 1.5 km" readonly />
                                 </div>
                                 <span asp-validation-for="Distance" class="text-danger"></span>
                             </div>

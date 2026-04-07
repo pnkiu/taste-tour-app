@@ -20,11 +20,14 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ExpireTimeSpan = TimeSpan.FromDays(1); // Thời gian nhớ đăng nhập
     });
 
-// --- BƯỚC 3: THÊM CẤU HÌNH DBCONTEXT Ở ĐÂY ---
+// =======================================================
+// --- BƯỚC 3: THÊM CẤU HÌNH DBCONTEXT Ở ĐÂY (ĐÃ ĐỔI SANG MYSQL) ---
+// =======================================================
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-// ----------------------------------------------
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
+// ----------------------------------------------
 var app = builder.Build();
 
 app.UseSwagger();
@@ -42,13 +45,12 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 // =======================================================
-// --- 3. GẮN Ổ KHÓA VÀO HỆ THỐNG (BẮT BUỘC ĐÚNG THỨ TỰ NÀY) ---
+// --- 4. GẮN Ổ KHÓA VÀO HỆ THỐNG (BẮT BUỘC ĐÚNG THỨ TỰ NÀY) ---
 // =======================================================
 app.UseAuthentication(); // <-- KIỂM TRA GIẤY TỜ (Xác thực)
 app.UseAuthorization();  // <-- XEM CÓ QUYỀN KHÔNG (Phân quyền)
 
 app.MapStaticAssets();
-
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
