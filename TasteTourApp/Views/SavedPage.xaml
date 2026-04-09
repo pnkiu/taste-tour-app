@@ -7,148 +7,154 @@
              BackgroundColor="#F5F6F7">
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        <BoxView Color="#F5F6F7" VerticalOptions="Fill" HorizontalOptions="Fill"/>
 
-        <!-- Main Content -->
-        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
-            <VerticalStackLayout Padding="24,16,24,120" Spacing="24">
-                
+        <!-- ===== MAIN CONTENT ===== -->
+        <ScrollView VerticalScrollBarVisibility="Never" Margin="0,0,0,88">
+            <VerticalStackLayout Padding="24" Spacing="0" Margin="0,64,0,0">
+
                 <!-- Editorial Header -->
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Yêu thích" FontSize="32" FontAttributes="Bold" TextColor="#2c2f30" />
-                    <Label Text="Bộ sưu tập ẩm thực cá nhân của bạn" FontSize="16" TextColor="#595c5d" Opacity="0.8" />
+                <VerticalStackLayout Spacing="6" Margin="0,0,0,20">
+                    <Label Text="Yêu thích" FontSize="32" FontAttributes="Bold" TextColor="#2c2f30"/>
+                    <Label Text="Bộ sưu tập ẩm thực cá nhân của bạn"
+                           FontSize="15" TextColor="#595c5d" Opacity="0.85"/>
                 </VerticalStackLayout>
 
-                <!-- Search & Filters -->
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
-                    <Border Grid.Column="0" BackgroundColor="#E0E3E4" StrokeShape="RoundRectangle 24" StrokeThickness="0" Padding="16,12">
-                        <Grid ColumnDefinitions="Auto,*">
-                            <Label Text="🔍" TextColor="#ABADAE" VerticalOptions="Center" Margin="0,0,12,0"/>
-                            <Entry Grid.Column="1" Placeholder="Tìm kiếm trong mục yêu thích..." TextColor="#2C2F30" PlaceholderColor="#ABADAE" BackgroundColor="Transparent" FontSize="14"/>
-                        </Grid>
+                <!-- Search Bar -->
+                <Border BackgroundColor="#E8EAEB" StrokeShape="RoundRectangle 24"
+                        StrokeThickness="0" Padding="16,12" Margin="0,0,0,20">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Label Text="🔍" TextColor="#ABADAE" VerticalOptions="Center"
+                               Margin="0,0,10,0" FontSize="15"/>
+                        <Entry x:Name="SearchEntry" Grid.Column="1"
+                               Placeholder="Tìm kiếm trong mục yêu thích..."
+                               TextColor="#2C2F30" PlaceholderColor="#ABADAE"
+                               BackgroundColor="Transparent" FontSize="14"
+                               TextChanged="SearchEntry_TextChanged"/>
+                    </Grid>
+                </Border>
+
+                <!-- Tab + Count Row -->
+                <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
+                    <Border BackgroundColor="#EFF1F2" StrokeShape="RoundRectangle 24"
+                            StrokeThickness="0" Padding="5" HorizontalOptions="Start">
+                        <Border BackgroundColor="White" StrokeShape="RoundRectangle 20"
+                                StrokeThickness="0" Padding="20,8">
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.06"/>
+                            </Border.Shadow>
+                            <Label Text="Địa điểm đã lưu" TextColor="#376454"
+                                   FontAttributes="Bold" FontSize="13" VerticalOptions="Center"/>
+                        </Border>
                     </Border>
-                    <Border Grid.Column="1" BackgroundColor="#376454" StrokeShape="RoundRectangle 24" StrokeThickness="0" Padding="20,12">
-                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                            <Label Text="📍" TextColor="#CCFDE8" FontSize="14" VerticalOptions="Center"/>
-                            <Label Text="Bản đồ" TextColor="#CCFDE8" FontAttributes="Bold" FontSize="14" VerticalOptions="Center"/>
-                        </HorizontalStackLayout>
+                    <Border Grid.Column="1" BackgroundColor="#D1FAE5"
+                            StrokeShape="RoundRectangle 12" StrokeThickness="0"
+                            Padding="12,6" VerticalOptions="Center">
+                        <Label x:Name="LblSavedCount" Text="0 địa điểm"
+                               FontSize="11" FontAttributes="Bold" TextColor="#064E3B"/>
                     </Border>
                 </Grid>
 
-                <!-- Tabs -->
-                <Border BackgroundColor="#EFF1F2" StrokeShape="RoundRectangle 24" StrokeThickness="0" Padding="6" HorizontalOptions="Start">
-                    <HorizontalStackLayout Spacing="8">
-                        <Border BackgroundColor="White" StrokeShape="RoundRectangle 20" StrokeThickness="0" Padding="20,8">
-                            <Label Text="Địa điểm đã lưu" TextColor="#376454" FontAttributes="Bold" FontSize="14" VerticalOptions="Center"/>
-                        </Border>
-                        <Border BackgroundColor="Transparent" StrokeShape="RoundRectangle 20" StrokeThickness="0" Padding="20,8">
-                            <Label Text="Món ăn yêu thích" TextColor="#595C5D" FontAttributes="Bold" FontSize="14" VerticalOptions="Center"/>
-                        </Border>
-                    </HorizontalStackLayout>
-                </Border>
+                <!-- ===== DYNAMIC SAVED CARDS ===== -->
+                <!-- Cards được render từ code-behind (RenderSavedCards) -->
+                <VerticalStackLayout x:Name="SavedCardStack" Spacing="16"/>
 
-                <!-- Content Grid (Cards) -->
-                <VerticalStackLayout Spacing="20">
-                    
-                    <!-- Card 1 -->
-                    <Border BackgroundColor="White" StrokeShape="RoundRectangle 16" StrokeThickness="0" HeightRequest="300">
-                        <Border.Shadow>
-                            <Shadow Brush="Black" Offset="0,4" Radius="12" Opacity="0.05" />
-                        </Border.Shadow>
-                        <Grid RowDefinitions="180,*">
-                            <Image Grid.Row="0" Aspect="AspectFill" BackgroundColor="#DADDDF" />
-                            <BoxView Grid.Row="0" Color="#55000000" VerticalOptions="End" HeightRequest="60" />
-                            <HorizontalStackLayout Grid.Row="0" Margin="16" Spacing="8" VerticalOptions="Start">
-                                <Border BackgroundColor="#6942BD" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="12,4">
-                                    <Label Text="PHỐ CỔ" TextColor="#F8F0FF" FontSize="10" FontAttributes="Bold" CharacterSpacing="1" />
-                                </Border>
-                                <Border BackgroundColor="#33FFFFFF" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="12,4">
-                                    <Label Text="⭐ 4.9" TextColor="White" FontSize="10" FontAttributes="Bold" />
-                                </Border>
-                            </HorizontalStackLayout>
-
-                            <Grid Grid.Row="1" Padding="20,16" RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,Auto">
-                                <VerticalStackLayout Grid.Column="0" Grid.Row="0" Spacing="4">
-                                    <Label Text="Bún Chả Cửa Đông" FontSize="18" FontAttributes="Bold" TextColor="#2C2F30" />
-                                    <Label Text="📍 41 Cửa Đông, Hoàn Kiếm, Hà Nội" FontSize="12" TextColor="#595C5D" FontAttributes="Italic" />
-                                </VerticalStackLayout>
-                                <Border Grid.Column="1" Grid.Row="0" BackgroundColor="#B7E7D2" StrokeShape="RoundRectangle 20" StrokeThickness="0" WidthRequest="40" HeightRequest="40" VerticalOptions="Start">
-                                    <Label Text="❤️" FontSize="16" TextColor="#376454" HorizontalOptions="Center" VerticalOptions="Center" />
-                                </Border>
-                                <Label Grid.Row="1" Grid.ColumnSpan="2" Text="Hương vị bún chả truyền thống với thịt nướng than hoa thơm nức mũi, một địa điểm không thể bỏ qua tại trung tâm Hà Nội." FontSize="13" TextColor="#2C2F30" Opacity="0.8" Margin="0,12,0,0" LineBreakMode="TailTruncation" MaxLines="2" />
-                            </Grid>
-                        </Grid>
+                <!-- Empty View (hiện khi không có item) -->
+                <VerticalStackLayout x:Name="EmptyView" IsVisible="False"
+                                     HorizontalOptions="Center"
+                                     Margin="0,60,0,0" Spacing="16">
+                    <Border BackgroundColor="#E8F5E9" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 40"
+                            WidthRequest="80" HeightRequest="80"
+                            HorizontalOptions="Center">
+                        <Label Text="🤍" FontSize="36"
+                               HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>
-
-                    <!-- Card 2 -->
-                    <Border BackgroundColor="White" StrokeShape="RoundRectangle 16" StrokeThickness="0">
-                        <Border.Shadow>
-                            <Shadow Brush="Black" Offset="0,4" Radius="12" Opacity="0.05" />
-                        </Border.Shadow>
-                        <Grid ColumnDefinitions="140,*">
-                            <Image Grid.Column="0" Aspect="AspectFill" BackgroundColor="#DADDDF" HeightRequest="120" />
-                            <Grid Grid.Column="1" Padding="16" RowDefinitions="Auto,Auto,*" ColumnDefinitions="*,Auto">
-                                <Label Grid.Row="0" Grid.Column="0" Text="Phở Thìn Lò Đúc" FontSize="18" FontAttributes="Bold" TextColor="#2C2F30" />
-                                <Label Grid.Row="0" Grid.Column="1" Text="❤️" FontSize="16" TextColor="#376454" HorizontalOptions="End" VerticalOptions="Start" />
-                                <Label Grid.Row="1" Grid.ColumnSpan="2" Text="📍 13 Lò Đúc, Hai Bà Trưng" FontSize="12" TextColor="#595C5D" FontAttributes="Italic" Margin="0,4,0,8" />
-                                <Label Grid.Row="2" Grid.ColumnSpan="2" Text="Nổi tiếng với món phở bò tái lăn độc đáo, hành lá xanh mướt phủ kín bát, nước dùng đậm đà béo ngậy." FontSize="12" TextColor="#2C2F30" Opacity="0.8" LineBreakMode="TailTruncation" MaxLines="2" />
-                            </Grid>
-                        </Grid>
-                    </Border>
-
+                    <Label Text="Chưa có địa điểm nào được lưu"
+                           FontSize="17" FontAttributes="Bold"
+                           TextColor="#2c2f30" HorizontalOptions="Center"/>
+                    <Label Text="Nhấn biểu tượng ❤️ trên trang chi tiết để lưu địa điểm yêu thích"
+                           FontSize="13" TextColor="#595c5d" Opacity="0.8"
+                           HorizontalOptions="Center" HorizontalTextAlignment="Center"
+                           LineHeight="1.5"/>
                 </VerticalStackLayout>
+
+                <!-- Bottom padding -->
+                <BoxView HeightRequest="24" Color="Transparent"/>
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- TopAppBar (Overlay on top) -->
-        <Border Grid.Row="0" BackgroundColor="#E6FFFFFF" StrokeThickness="0" Padding="24,16" Margin="0,0,0,0">
-            <Grid ColumnDefinitions="*,Auto">
-                <Label Text="Taste Tour App" FontSize="20" FontAttributes="Bold, Italic" TextColor="#064E3B" VerticalOptions="Center"/>
-                <Border Grid.Column="1" BackgroundColor="Transparent" StrokeShape="RoundRectangle 20" StrokeThickness="0" Padding="8">
-                    <Label Text="🔍" FontSize="18" TextColor="#064E3B" VerticalOptions="Center"/>
+        <!-- ===== TOP APP BAR ===== -->
+        <Border ZIndex="5" VerticalOptions="Start" HorizontalOptions="Fill"
+                BackgroundColor="#E6FFFFFF" StrokeThickness="0" HeightRequest="64">
+            <Border.Shadow>
+                <Shadow Brush="#064E3B" Offset="0,2" Radius="8" Opacity="0.05"/>
+            </Border.Shadow>
+            <Grid Padding="24,0" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                <Label Text="Taste Tour App" FontSize="20" FontAttributes="Bold, Italic"
+                       TextColor="#064E3B" VerticalOptions="Center"/>
+                <Border Grid.Column="1" BackgroundColor="#20b7e7d2" Stroke="#b7e7d2"
+                        StrokeThickness="2" StrokeShape="RoundRectangle 20"
+                        WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                    <Label Text="🔍" FontSize="16" TextColor="#064E3B"
+                           HorizontalOptions="Center" VerticalOptions="Center"/>
                 </Border>
             </Grid>
         </Border>
 
-        <!-- Bottom Navigation Bar (Mimic MainPage) -->
-        <Border Grid.Row="2" VerticalOptions="End" BackgroundColor="#CCFFFFFF" StrokeShape="RoundRectangle 40,40,0,0" StrokeThickness="0" Padding="24">
+        <!-- ===== NAVIGATION BAR ===== -->
+        <Border ZIndex="4" VerticalOptions="End" HorizontalOptions="Fill"
+                BackgroundColor="#CCFFFFFF"
+                StrokeShape="RoundRectangle 40,40,0,0"
+                StrokeThickness="0" Padding="24">
             <Border.Shadow>
-                <Shadow Brush="#2E5B4B" Offset="0,-8" Radius="24" Opacity="0.08" />
+                <Shadow Brush="#2E5B4B" Offset="0,-8" Radius="24" Opacity="0.08"/>
             </Border.Shadow>
             <Grid ColumnDefinitions="*,*,*,*">
-                
-                <!-- Home -->
-                <VerticalStackLayout Grid.Column="0" Padding="20,8" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Label Text="EXPLORE" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5" TextColor="#80065F46" HorizontalOptions="Center" />
+
+                <!-- Explore -->
+                <VerticalStackLayout Grid.Column="0" Padding="20,8"
+                                     HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="EXPLORE" FontSize="10" FontAttributes="Bold"
+                           CharacterSpacing="1.5" TextColor="#80065F46"
+                           HorizontalOptions="Center"/>
                     <VerticalStackLayout.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="NavHome_Tapped" />
+                        <TapGestureRecognizer Tapped="NavHome_Tapped"/>
                     </VerticalStackLayout.GestureRecognizers>
                 </VerticalStackLayout>
 
                 <!-- Tours -->
-                <VerticalStackLayout Grid.Column="1" Padding="20,8" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Label Text="TOURS" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5" TextColor="#80065F46" HorizontalOptions="Center" />
+                <VerticalStackLayout Grid.Column="1" Padding="20,8"
+                                     HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="TOURS" FontSize="10" FontAttributes="Bold"
+                           CharacterSpacing="1.5" TextColor="#80065F46"
+                           HorizontalOptions="Center"/>
                     <VerticalStackLayout.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="NavTours_Tapped" />
+                        <TapGestureRecognizer Tapped="NavTours_Tapped"/>
                     </VerticalStackLayout.GestureRecognizers>
                 </VerticalStackLayout>
 
                 <!-- Saved (Active) -->
-                <Border Grid.Column="2" BackgroundColor="#D1FAE5" StrokeShape="RoundRectangle 20" StrokeThickness="0" Padding="20,8" Scale="1.1" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Label Text="SAVED" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5" TextColor="#064E3B" HorizontalOptions="Center" />
+                <Border Grid.Column="2" BackgroundColor="#D1FAE5"
+                        StrokeShape="RoundRectangle 20" StrokeThickness="0"
+                        Padding="20,8" Scale="1.1"
+                        HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="SAVED" FontSize="10" FontAttributes="Bold"
+                           CharacterSpacing="1.5" TextColor="#064E3B"
+                           HorizontalOptions="Center"/>
                 </Border>
 
                 <!-- Profile -->
-                <VerticalStackLayout Grid.Column="3" Padding="20,8" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Label Text="PROFILE" FontSize="10" FontAttributes="Bold" CharacterSpacing="1.5" TextColor="#80065F46" HorizontalOptions="Center" />
+                <VerticalStackLayout Grid.Column="3" Padding="20,8"
+                                     HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="PROFILE" FontSize="10" FontAttributes="Bold"
+                           CharacterSpacing="1.5" TextColor="#80065F46"
+                           HorizontalOptions="Center"/>
                     <VerticalStackLayout.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="NavProfile_Tapped" />
+                        <TapGestureRecognizer Tapped="NavProfile_Tapped"/>
                     </VerticalStackLayout.GestureRecognizers>
                 </VerticalStackLayout>
+
             </Grid>
         </Border>
 

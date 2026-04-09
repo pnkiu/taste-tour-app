@@ -1,20 +1,26 @@
-using System;
 using Microsoft.Maui.Controls;
+using System;
+using TasteTourApp.Services;
+using TasteTourApp.Services.Geofence;
 
 namespace TasteTourApp.Views;
 
 public partial class ProfilePage : ContentPage
 {
-    public ProfilePage()
+    private readonly DatabaseService _dbService;
+    private readonly GeofenceEngine _geofenceEngine;
+    public ProfilePage(DatabaseService dbService, GeofenceEngine geofenceEngine)
     {
         InitializeComponent();
+        _dbService = dbService;
+        _geofenceEngine = geofenceEngine;
     }
 
-    private async void NavExplore_Tapped(object sender, EventArgs e)
+    private void NavExplore_Tapped(object sender, EventArgs e)
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new MainPage());
+            Application.Current.MainPage = new NavigationPage(new MainPage(_dbService, _geofenceEngine));
         }
     }
 
@@ -22,13 +28,16 @@ public partial class ProfilePage : ContentPage
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new TourPage());
+            Application.Current.MainPage = new NavigationPage(new TourPage(_dbService, _geofenceEngine));
         }
     }
 
     private void NavSaved_Tapped(object sender, EventArgs e)
     {
-        // Điều hướng sang Saved page (nếu có)
+        if (Application.Current != null)
+        {
+            Application.Current.MainPage = new NavigationPage(new SavedPage(_dbService, _geofenceEngine));
+        }
     }
 
     private async void DangXuat_Tapped(object sender, EventArgs e)

@@ -2,12 +2,12 @@ using TasteTourApp.Models;
 using TasteTourApp.Services;
 using TasteTourApp.Services.Geofence;
 
-namespace TasteTourApp.Views;
-
-public partial class MainPage : ContentPage
+namespace TasteTourApp.Views
 {
-    private readonly DatabaseService _dbService;
-    private readonly GeofenceEngine _geofenceEngine;
+    public partial class MainPage : ContentPage
+    {
+        private readonly DatabaseService _dbService;
+        private readonly GeofenceEngine _geofenceEngine;
     private List<QuanAn> _danhSachQuan = new();
     private QuanAn? _quanDangChon = null;
     private bool _sheetDangMo = false;
@@ -252,12 +252,21 @@ public partial class MainPage : ContentPage
 
     // ── GeofenceEngine event handlers ────────────────────────────────
 
-    /// Tự động phát TTS khi người dùng bước vào vùng một quán
+    /// Tự động phát TTS khi người dùng VÀO vùng POI (Enter), chỉ notify khi Nearby
     private async void OnPoiTriggered(object? sender, GeofenceTrigger trigger)
     {
         System.Diagnostics.Debug.WriteLine(
-            $"[Geofence] Kích hoạt: {trigger.Quan.TenQuan} ({trigger.DistanceMeters:F0}m)");
+            $"[Geofence] {trigger.Type}: {trigger.Quan.TenQuan} ({trigger.DistanceMeters:F0}m)");
 
+        if (trigger.Type == GeofenceTriggerType.Nearby)
+        {
+            // Chỉ hiển thị thông báo nhẹ, không phát TTS
+            System.Diagnostics.Debug.WriteLine(
+                $"[Geofence] Nearby — không phát TTS cho {trigger.Quan.TenQuan}");
+            return;
+        }
+
+        // Enter: kích hoạt TTS nếu sheet đang đóng và chưa có TTS đang phát
         if (_sheetDangMo) return;
         if (_dangPhatTTS) return;
 
@@ -318,10 +327,10 @@ public partial class MainPage : ContentPage
 
     // 🧪 TỌA ĐỘ MẪU — thay đổi tại đây để test các vị trí khác nhau
     // Vị trí này nằm trên đường Vĩnh Khánh, gần các quán ốc
-    private const double MOCK_LAT = 10.76185;
-    private const double MOCK_LNG = 106.70230;
+    private const double MOCK_LAT = 10.761695;
+        private const double MOCK_LNG = 106.702222;
 
-    private async Task GetUserLocationAsync()
+        private async Task GetUserLocationAsync()
     {
         // ── DÙNG TỌA ĐỘ MẪU ĐỂ TEST ──
         _userLat = MOCK_LAT;
@@ -605,6 +614,9 @@ public partial class MainPage : ContentPage
         LblPlayIcon.Text = "▶";
         LblRating.Text = "4.5";
 
+        // Cập nhật trạng thái tim theo DB
+        BtnHeartPoi.Text = quan.IsSaved ? "❤️" : "🤍";
+
         // Cập nhật hero image theo loại quán
         var (emoji, bgColor, label) = LayThongTinLoai(quan.LoaiQuan ?? "");
         HeroImage.BackgroundColor = Color.FromArgb(bgColor);
@@ -845,11 +857,19 @@ public partial class MainPage : ContentPage
         if (_sheetDangMo) BtnDong_Tapped(sender, e);
     }
 
+    private void NavSaved_Tapped(object sender, EventArgs e)
+    {
+        if (Application.Current != null)
+        {
+            Application.Current.MainPage = new NavigationPage(new SavedPage(_dbService, _geofenceEngine));
+        }
+    }
+
     private void NavTours_Tapped(object sender, EventArgs e)
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new TourPage());
+            Application.Current.MainPage = new NavigationPage(new TourPage(_dbService, _geofenceEngine));
         }
     }
 
@@ -857,7 +877,27 @@ public partial class MainPage : ContentPage
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new ProfilePage());
+            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine));
         }
     }
+
+    // ============================================================
+    //  NÚT TIM (YÊU THÍCH)
+    // ============================================================
+    private async void BtnHeartPoi_Tapped(object sender, EventArgs e)
+    {
+        if (_quanDangChon == null) return;
+
+        // Toggle trạng thái
+        _quanDangChon.IsSaved = !_quanDangChon.IsSaved;
+
+        // Lưu vào DB
+        await _dbService.LuuYeuThich(_quanDangChon.Id, _quanDangChon.IsSaved);
+
+        // Cập nhật icon tim với animation nhỏ
+        BtnHeartPoi.Text = _quanDangChon.IsSaved ? "❤️" : "🤍";
+        await BtnHeartPoi.ScaleTo(1.3, 100);
+        await BtnHeartPoi.ScaleTo(1.0, 100);
+    }
+}
 }

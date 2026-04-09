@@ -1,10 +1,17 @@
+using TasteTourApp.Services;
+using TasteTourApp.Services.Geofence;
+
 namespace TasteTourApp.Views;
 
 public partial class TourPage : ContentPage
 {
-    public TourPage()
+    private readonly DatabaseService _dbService;
+    private readonly GeofenceEngine _geofenceEngine;
+    public TourPage(DatabaseService dbService, GeofenceEngine geofenceEngine)
     {
         InitializeComponent();
+        _dbService = dbService;
+        _geofenceEngine = geofenceEngine;
     }
 
     // ============================================================
@@ -12,10 +19,9 @@ public partial class TourPage : ContentPage
     // ============================================================
     private void BtnBatDau_Tapped(object sender, EventArgs e)
     {
-        // Chuyển sang MainPage (Explore) để bắt đầu khám phá
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new MainPage());
+            Application.Current.MainPage = new NavigationPage(new MainPage(_dbService, _geofenceEngine));
         }
     }
 
@@ -34,20 +40,23 @@ public partial class TourPage : ContentPage
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new MainPage());
+            Application.Current.MainPage = new NavigationPage(new MainPage(_dbService, _geofenceEngine));
         }
     }
 
     private void NavSaved_Tapped(object sender, EventArgs e)
     {
-        // TODO: Saved page
+        if (Application.Current != null)
+        {
+            Application.Current.MainPage = new NavigationPage(new SavedPage(_dbService, _geofenceEngine));
+        }
     }
 
     private void NavProfile_Tapped(object sender, EventArgs e)
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new ProfilePage());
+            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -10,7 +10,8 @@ namespace TasteTourApp.Services
     public class DatabaseService
     {
         // Tăng số này lên mỗi khi muốn reset data (ví dụ đổi tọa độ, thêm quán)
-        private const int DATA_VERSION = 5;
+        // v6: Thêm cột IsSaved vào QuanAn
+        private const int DATA_VERSION = 7;
 
         private SQLiteAsyncConnection _db;
         private bool _daKhoiTao = false;
@@ -91,13 +92,14 @@ namespace TasteTourApp.Services
             await _db.InsertAsync(new QuanAn
             {
                 Id = "VK_03",
-                TenQuan = "Sushi Viên Vĩnh Khánh",
-                MoTa = "Đổi gió với sushi giá sinh viên ngay giữa phố ốc. Ngon, bổ, rẻ và cực kỳ đông khách.",
+                TenQuan = "Quán Nước SINZIEN",
+                MoTa = "Trạm dừng chân lý tưởng với không gian cực chill. Chuyên các dòng trà trái cây giải nhiệt siêu mát lạnh. Món tủ: Trà hoa quả nhiệt đới.",
                 // TODO: Thay tọa độ đúng bên dưới
                 // Cách lấy: mở Google Maps → tìm quán → chuột phải vào đúng vị trí → copy tọa độ
-                ViDo = 10.762142,
-                KinhDo = 106.702456,
-                LoaiQuan = "Sushi",     // ← thêm
+                ViDo = 10.761772317225041,
+                KinhDo = 106.70227311017166,
+                HinhAnh="sinzien.jpg",
+                LoaiQuan = "DoUong",     // ← thêm
                 MucUuTien = 1,
                 ThuTuHienThi = 3
             });
@@ -148,6 +150,28 @@ namespace TasteTourApp.Services
             await Init();
             return await _db.Table<QuanAn>()
                 .FirstOrDefaultAsync(q => q.Id == idQuan);
+        }
+
+        /// <summary>Toggle trạng thái yêu thích của một quán ăn</summary>
+        public async Task LuuYeuThich(string idQuan, bool isSaved)
+        {
+            await Init();
+            var quan = await _db.Table<QuanAn>()
+                .FirstOrDefaultAsync(q => q.Id == idQuan);
+            if (quan != null)
+            {
+                quan.IsSaved = isSaved;
+                await _db.UpdateAsync(quan);
+            }
+        }
+
+        /// <summary>Lấy danh sách các quán đã được lưu yêu thích</summary>
+        public async Task<List<QuanAn>> LayDanhSachYeuThich()
+        {
+            await Init();
+            return await _db.Table<QuanAn>()
+                .Where(q => q.IsSaved && q.Id != "VK_VERSION")
+                .ToListAsync();
         }
     }
 }

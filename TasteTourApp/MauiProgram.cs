@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 using TasteTourApp.Services;
 using TasteTourApp.Services.Geofence;
@@ -23,6 +23,7 @@ namespace TasteTourApp
             builder.Services.AddSingleton<DatabaseService>();
             builder.Services.AddSingleton<GeofenceEngine>();
             builder.Services.AddTransient<MainPage>();
+            builder.Services.AddTransient<SavedPage>();
 
 #if DEBUG
             builder.Logging.AddDebug();
