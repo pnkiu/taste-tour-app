@@ -7,7 +7,6 @@ Thành viên tham gia: Nguyễn Tấn Phát (3123411219)
   	  Nguyễn Huỳnh Hoàng Vũ (3123411346)
 
 [Ứng dụng thuyết minh phố ẩm thực Vĩnh Khánh] - Product Requirement Document (PRD)
-
 1. Tổng quan dự án (Executive Summary)
 1.1. Bối cảnh (Background)
 Trong kỷ nguyên số, khách du lịch đang đối mặt với "nghịch lý của sự lựa chọn" do tình trạng quá tải thông tin. Mặc dù có vô vàn gợi ý từ các nền tảng mạng xã hội (Facebook, TikTok) và công cụ tìm kiếm, nhưng dữ liệu này thường rời rạc, thiếu tính hệ thống và độ tin cậy không đồng nhất.
