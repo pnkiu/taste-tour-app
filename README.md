@@ -29,6 +29,7 @@ Du khách quốc tế: Những người gặp khó khăn về ngôn ngữ và k�
 Người yêu thích khám phá (Explorers): Những người muốn tìm kiếm các địa điểm chuyên sâu thay vì chỉ các điểm đến phổ thông trên bản đồ giao thông.
 
 2. Yêu cầu chức năng (Functional Requirements)
+
 2.1. Bản đồ ẩm thực tương tác
 Hiển thị danh sách các quán ăn theo danh mục (Ốc, đồ nướng, lẩu, tráng miệng).
 Định vị GPS người dùng trên phố Vĩnh Khánh.
