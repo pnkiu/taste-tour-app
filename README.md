@@ -28,7 +28,7 @@ Khách du lịch tự túc (Solo Travelers): Những người cần lộ trình 
 Du khách quốc tế: Những người gặp khó khăn về ngôn ngữ và kết nối mạng khi vừa đặt chân đến địa phương.
 Người yêu thích khám phá (Explorers): Những người muốn tìm kiếm các địa điểm chuyên sâu thay vì chỉ các điểm đến phổ thông trên bản đồ giao thông.
 
-2. Yêu cầu chức năng (Functional Requirements)
+2. Chức năng 
 
 2.1. Bản đồ ẩm thực tương tác
 Hiển thị danh sách các quán ăn theo danh mục (Ốc, đồ nướng, lẩu, tráng miệng).
@@ -41,6 +41,8 @@ Hình ảnh & Thực đơn: Hiển thị menu chi tiết và giá cả tham kh�
 
 2.3. Lộ trình gợi ý (Itineraries)
 Gợi ý tour "Càn quét phố ốc" hoặc "Ăn vặt vỉa hè" tùy theo ngân sách và thời gian của người dùng.
+
+2.4. Lưu địa điểm yểu thích
 
 3. Kiến trúc hệ thống & Công nghệ (Technical Stack)
 Framework: .NET MAUI (Cross-platform cho Android & iOS), ASP .NET cho web.
