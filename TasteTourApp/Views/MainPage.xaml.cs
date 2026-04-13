@@ -240,8 +240,7 @@ namespace TasteTourApp.Views
         _geofenceEngine = geofenceEngine;
 
         // ── Wire GeofenceEngine events ────────────────────────────────
-        _geofenceEngine.PoiTriggered += OnPoiTriggered;
-        _geofenceEngine.NearestPoiChanged += OnNearestPoiChanged;
+        
 
         // FIX: Ẩn sheet ngay khi khởi tạo bằng cách đẩy xuống ngoài màn hình
         TheChiTiet.SizeChanged += OnSheetSizeChanged;
@@ -307,7 +306,9 @@ namespace TasteTourApp.Views
         base.OnAppearing();
         await LoadDuLieuTuKho();
         _ = GetUserLocationAsync(); // Fire and forget
-    }
+            _geofenceEngine.PoiTriggered += OnPoiTriggered;
+            _geofenceEngine.NearestPoiChanged += OnNearestPoiChanged;
+        }
 
     // ============================================================
     //  LOAD DỮ LIỆU
@@ -899,5 +900,15 @@ namespace TasteTourApp.Views
         await BtnHeartPoi.ScaleTo(1.3, 100);
         await BtnHeartPoi.ScaleTo(1.0, 100);
     }
-}
+
+        // Thêm hàm này để "rút tai nghe" khi trang này bị đóng/chuyển đi
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+
+            // Hủy đăng ký sự kiện để chống bóng ma (Memory Leak)
+            _geofenceEngine.PoiTriggered -= OnPoiTriggered;
+            _geofenceEngine.NearestPoiChanged -= OnNearestPoiChanged;
+        }
+    }
 }

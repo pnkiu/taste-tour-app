@@ -11,7 +11,7 @@ namespace TasteTourApp.Services
     {
         // Tăng số này lên mỗi khi muốn reset data (ví dụ đổi tọa độ, thêm quán)
         // v6: Thêm cột IsSaved vào QuanAn
-        private const int DATA_VERSION = 7;
+        private const int DATA_VERSION = 8;
 
         private SQLiteAsyncConnection _db;
         private bool _daKhoiTao = false;
@@ -73,7 +73,8 @@ namespace TasteTourApp.Services
                 HinhAnh = "quan_oc_phat.jpg",
                 LoaiQuan = "Oc",
                 MucUuTien = 3,
-                ThuTuHienThi = 1
+                ThuTuHienThi = 1,
+                BanKinhMet = 15
             });
 
             await _db.InsertAsync(new QuanAn
@@ -86,7 +87,8 @@ namespace TasteTourApp.Services
                 HinhAnh= "quan_oc_thao.jpg",
                 LoaiQuan = "HaiSan",    // ← thêm
                 MucUuTien = 2,
-                ThuTuHienThi = 2
+                ThuTuHienThi = 2,
+                BanKinhMet = 15
             });
 
             await _db.InsertAsync(new QuanAn
@@ -101,7 +103,8 @@ namespace TasteTourApp.Services
                 HinhAnh="sinzien.jpg",
                 LoaiQuan = "DoUong",     // ← thêm
                 MucUuTien = 1,
-                ThuTuHienThi = 3
+                ThuTuHienThi = 3,
+                BanKinhMet = 15
             });
             await _db.InsertAsync(new QuanAn
             {
@@ -115,7 +118,8 @@ namespace TasteTourApp.Services
                 HinhAnh = "nuong_ngoi_titi.jpg",
                 LoaiQuan = "HaiSan",     // ← thêm
                 MucUuTien = 5,
-                ThuTuHienThi = 4
+                ThuTuHienThi = 4,
+                BanKinhMet = 15
             });
             await _db.InsertAsync(new QuanAn
             {
@@ -129,7 +133,8 @@ namespace TasteTourApp.Services
                 HinhAnh = "oc_35k.jpg",
                 LoaiQuan = "Oc",     // ← thêm
                 MucUuTien = 6,
-                ThuTuHienThi = 5
+                ThuTuHienThi = 5,
+                BanKinhMet = 15
             });
         }
 

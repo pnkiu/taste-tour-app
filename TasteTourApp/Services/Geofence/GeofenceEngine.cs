@@ -1,3 +1,4 @@
+using Mapsui.Utilities;
 using TasteTourApp.Models;
 using TasteTourApp.Services;
 
@@ -99,15 +100,14 @@ namespace TasteTourApp.Services.Geofence
 
         /// <summary>
         /// Kiểm tra tất cả POI, xác định POI gần nhất và POI cần kích hoạt.
-        /// Chỉ kích hoạt POI ưu tiên cao nhất trong bán kính mỗi lần đánh giá.
         /// </summary>
         private async Task EvaluatePoisAsync(double userLat, double userLng)
         {
             try
             {
-                var allQuan = await _dbService.LayDanhSachQuanAn();
+                var allQuan = await _dbService.LayDanhSachQuanAn(); // Gọi _dbService.LayDanhSachQuanAn() để lấy danh sách POI từ database
 
-                // Tính khoảng cách tới mọi POI, sắp xếp: ưu tiên cao → khoảng cách gần
+                // Dùng hàm toán học(Haversine) để đo xem người dùng đang cách quán đó bao nhiêu mét.
                 var withDistance = allQuan
                     .Select(q => new
                     {
@@ -119,6 +119,9 @@ namespace TasteTourApp.Services.Geofence
                     .ToList();
 
                 // ── Bước 1: Phát NearestPoiChanged (UI highlight, không cần trong bán kính) ──
+                //Trong danh sách vừa đo, tìm ra quán có số mét nhỏ nhất.
+                //So sánh với biến _lastNearestId xem có khác với quán gần nhất lúc nãy không.
+                //Nếu khác, gửi sự kiện NearestPoiChanged ra ngoài để MainPage cập nhật dòng chữ trên màn hình.
                 var nearest = withDistance.MinBy(x => x.Distance);
                 if (nearest != null && nearest.Quan.Id != _lastNearestId)
                 {
@@ -127,47 +130,48 @@ namespace TasteTourApp.Services.Geofence
                         NearestPoiChanged?.Invoke(this, (nearest.Quan.Id, nearest.Distance)));
                 }
 
-                // ── Bước 2: Xét các POI trong bán kính Enter, chọn POI ưu tiên nhất ──
-                foreach (var item in withDistance)
+                // ── Bước 2: Xử lý kích hoạt (Ưu tiên Enter trước, Nearby sau) ──
+
+                // Tìm TẤT CẢ các quán nằm trong bán kính Enter
+                var enterPois = withDistance.Where(x =>
+                    x.Distance <= (x.Quan.BanKinhMet > 0 ? x.Quan.BanKinhMet : 50)).ToList();
+
+                //Nhóm Enter: Lọc ra những quán có số mét <= BanKinhMet.
+                //Nếu có quán thỏa mãn: Code sẽ sắp xếp chọn ra quán gần nhất và có MucUuTien cao nhất. Sau đó, nó kiểm tra biến _lastTriggered xem đã qua 10 phút chưa. Nếu qua rồi, gửi sự kiện PoiTriggered(loại Enter) ra ngoài để MainPage mở loa đọc thuyết minh.
+
+                if (enterPois.Any())
                 {
-                    double enterRadius = item.Quan.BanKinhMet > 0 ? item.Quan.BanKinhMet : 50;
-                    double nearbyRadius = enterRadius * NearbyRadiusMultiplier;
+                    var winner = enterPois
+                        .OrderBy(x => x.Distance)                 // 1. CHUẨN NHẤT: Quán nào gần nhất bằng số mét thì ĂN!
+                        .ThenBy(x => x.Quan.MucUuTien)            // 2. Nếu lỡ 2 quán cách đúng 10m y chang nhau, thì quán nào có MucUuTien = 1 sẽ thắng.
+                        .First();
 
-                    if (item.Distance > nearbyRadius)
-                        continue; // Quá xa — bỏ qua hoàn toàn
-
-                    // Kiểm tra cooldown (chống spam cho cả Enter lẫn Nearby)
-                    if (_lastTriggered.TryGetValue(item.Quan.Id, out var lastTime) &&
-                        DateTime.UtcNow - lastTime < Cooldown)
-                        continue;
-
-                    GeofenceTriggerType triggerType;
-                    if (item.Distance <= enterRadius)
+                    if (!_lastTriggered.TryGetValue(winner.Quan.Id, out var lastTime) || DateTime.UtcNow - lastTime >= Cooldown)
                     {
-                        // Người dùng VÀO vùng POI → Enter → kích hoạt TTS
-                        triggerType = GeofenceTriggerType.Enter;
+                        _lastTriggered[winner.Quan.Id] = DateTime.UtcNow;
+                        var trigger = new GeofenceTrigger { Quan = winner.Quan, DistanceMeters = winner.Distance, Type = GeofenceTriggerType.Enter };
+                        MainThread.BeginInvokeOnMainThread(() => PoiTriggered?.Invoke(this, trigger));
                     }
-                    else
+                }
+                else
+                {
+                    // NẾU KHÔNG CÓ QUÁN NÀO ENTER, mới bắt đầu xét Nearby
+                    var nearbyPois = withDistance.Where(x =>
+                        x.Distance <= (x.Quan.BanKinhMet > 0 ? x.Quan.BanKinhMet * NearbyRadiusMultiplier : 150)).ToList();
+
+                    if (nearbyPois.Any())
                     {
-                        // Người dùng ĐẾN GẦN POI (ngoài Enter, trong Nearby) → chỉ notify
-                        triggerType = GeofenceTriggerType.Nearby;
+                        var winner = enterPois
+                            .OrderBy(x => x.Distance)                 // 1. CHUẨN NHẤT: Quán nào gần nhất bằng số mét thì ĂN!
+                            .ThenBy(x => x.Quan.MucUuTien)            // 2. Nếu lỡ 2 quán cách đúng 10m y chang nhau, thì quán nào có MucUuTien = 1 sẽ thắng.
+                            .First();
+                        if (!_lastTriggered.TryGetValue(winner.Quan.Id, out var lastTime) || DateTime.UtcNow - lastTime >= Cooldown)
+                        {
+                            _lastTriggered[winner.Quan.Id] = DateTime.UtcNow;
+                            var trigger = new GeofenceTrigger { Quan = winner.Quan, DistanceMeters = winner.Distance, Type = GeofenceTriggerType.Nearby };
+                            MainThread.BeginInvokeOnMainThread(() => PoiTriggered?.Invoke(this, trigger));
+                        }
                     }
-
-                    // Ghi log và phát sự kiện
-                    _lastTriggered[item.Quan.Id] = DateTime.UtcNow;
-
-                    var trigger = new GeofenceTrigger
-                    {
-                        Quan = item.Quan,
-                        DistanceMeters = item.Distance,
-                        Type = triggerType
-                    };
-
-                    // Invoke trên Main thread để UI update trực tiếp
-                    MainThread.BeginInvokeOnMainThread(() =>
-                        PoiTriggered?.Invoke(this, trigger));
-
-                    break; // Chỉ kích hoạt 1 POI ưu tiên nhất mỗi chu kỳ
                 }
             }
             catch (Exception ex)
