@@ -1,0 +1,146 @@
+﻿@model TravelGuide.Web.Models.POI
+
+@{
+    ViewData["Title"] = "Cập nhật Điểm thuyết minh";
+}
+
+<h1 class="h3 mb-2 text-gray-800">Cập nhật Điểm thuyết minh</h1>
+<p class="mb-4">Chỉnh sửa thông tin hoặc click vào bản đồ để tự động lấy tọa độ mới (Vĩ độ/Kinh độ).</p>
+
+<div class="row">
+    <div class="col-xl-5 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Thông tin chi tiết</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="form-group">
+                        <label asp-for="Name" class="control-label font-weight-bold">Tên địa điểm</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Description" class="control-label font-weight-bold">Mô tả chi tiết</label>
+                        <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Latitude" class="control-label font-weight-bold">Vĩ độ (Lat)</label>
+                            <input asp-for="Latitude" id="latInput" class="form-control bg-light" readonly />
+                            <span asp-validation-for="Latitude" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Longitude" class="control-label font-weight-bold">Kinh độ (Lng)</label>
+                            <input asp-for="Longitude" id="lngInput" class="form-control bg-light" readonly />
+                            <span asp-validation-for="Longitude" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Radius" class="control-label font-weight-bold">Bán kính (m)</label>
+                            <input asp-for="Radius" class="form-control" />
+                            <span asp-validation-for="Radius" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Priority" class="control-label font-weight-bold">Mức ưu tiên</label>
+                            <input asp-for="Priority" class="form-control" />
+                            <span asp-validation-for="Priority" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ImageUrl" class="control-label font-weight-bold text-info">Link ảnh minh họa</label>
+                        <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                        <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="AudioContent" class="control-label font-weight-bold text-info">File Audio hoặc Script TTS</label>
+                        <input asp-for="AudioContent" class="form-control" />
+                        <span asp-validation-for="AudioContent" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="MapLink" class="control-label font-weight-bold text-info">Link bản đồ Google Maps</label>
+                        <input asp-for="MapLink" class="form-control" />
+                        <span asp-validation-for="MapLink" class="text-danger"></span>
+                    </div>
+
+                    <hr />
+                    <div class="form-group mb-0">
+                        <button type="submit" class="btn btn-primary btn-icon-split">
+                            <span class="icon text-white-50"><i class="fas fa-save"></i></span>
+                            <span class="text">Lưu thay đổi</span>
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary ml-2">Quay lại</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-7 col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-warning"><i class="fas fa-map-marked-alt"></i> Bản đồ (Click để dời vị trí)</h6>
+            </div>
+            <div class="card-body p-1">
+                <div id="map" style="height: 600px; width: 100%; border-radius: 0.35rem;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        $(document).ready(function() {
+        // 1. Lấy tọa độ hiện tại từ Database đổ ra (nếu lỗi thì mặc định Vĩnh Khánh)
+        var currentLat = parseFloat($('#latInput').val().replace(',','.')) || 10.760111;
+        var currentLng = parseFloat($('#lngInput').val().replace(',','.')) || 106.700465;
+            
+        // 2. Khởi tạo map tại vị trí cũ của quán
+        var map = L.map('map').setView([currentLat, currentLng], 17);
+            
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // 3. Cắm ghim (Marker) tại vị trí hiện tại
+        var marker = L.marker([currentLat, currentLng]).addTo(map)
+        .bindPopup("<b>Vị trí hiện tại</b>").openPopup();
+
+        // 4. Sự kiện Click để thay đổi tọa độ
+        map.on('click', function(e) {
+        var lat = e.latlng.lat.toFixed(6);
+        var lng = e.latlng.lng.toFixed(6);
+
+        // Cập nhật giá trị vào 2 ô Input
+        $('#latInput').val(lat);
+        $('#lngInput').val(lng);
+
+        // Di chuyển ghim đến vị trí mới
+        if(marker) {
+        map.removeLayer(marker);
+        }
+        marker = L.marker([lat, lng]).addTo(map)
+        .bindPopup("Vị trí mới được chọn:<br>" + lat + ", " + lng).openPopup();
+        });
+        });
+    </script>
+}

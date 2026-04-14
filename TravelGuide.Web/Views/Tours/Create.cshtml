@@ -1,0 +1,118 @@
+﻿@model TravelGuide.Web.Models.Tour
+
+@{
+    ViewData["Title"] = "Thêm mới Hành trình";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Thêm mới Hành trình</h1>
+    <a asp-action="Index" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left fa-sm text-white-50"></i> Quay lại danh sách
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4 border-bottom-success">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success"><i class="fas fa-plus-circle"></i> Nhập thông tin Hành trình mới</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="form-group">
+                        <label asp-for="Name" class="control-label font-weight-bold text-dark">Tên Hành trình</label>
+                        <input asp-for="Name" class="form-control" placeholder="VD: Khám phá Ốc Vĩnh Khánh..." />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Description" class="control-label font-weight-bold text-dark">Mô tả hấp dẫn</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Viết vài dòng giới thiệu để thu hút du khách..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Duration" class="control-label font-weight-bold text-dark">Thời gian dự kiến</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text bg-light"><i class="fas fa-clock text-primary"></i></span></div>
+                                    <input asp-for="Duration" class="form-control" placeholder="VD: 2 giờ" />
+                                </div>
+                                <span asp-validation-for="Duration" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Distance" class="control-label font-weight-bold text-dark">Tổng quãng đường</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text bg-light"><i class="fas fa-route text-success"></i></span></div>
+                                    <input asp-for="Distance" class="form-control" placeholder="VD: 1.5 km" />
+                                </div>
+                                <span asp-validation-for="Distance" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ImageUpload" class="control-label font-weight-bold text-dark">Tải Ảnh bìa lên từ máy tính</label>
+                        <div class="custom-file">
+                            <input type="file" asp-for="ImageUpload" class="custom-file-input" id="customFile" accept="image/*">
+                                <label class="custom-file-label" for="customFile" data-browse="Chọn tệp">Chưa chọn file nào...</label>
+                            </div>
+                            <span asp-validation-for="ImageUpload" class="text-danger"></span>
+                        </div>
+
+                        <hr>
+                        <div class="form-group text-center mt-4 mb-0">
+                            <button type="submit" class="btn btn-success btn-icon-split shadow-sm px-4">
+                                <span class="icon text-white-50"><i class="fas fa-plus"></i></span>
+                                <span class="text font-weight-bold">Tạo mới Hành trình</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success"><i class="fas fa-image"></i> Xem trước Ảnh bìa</h6>
+                </div>
+                <div class="card-body text-center bg-gray-100">
+                    <img id="ImagePreview" src="https://via.placeholder.com/400x300?text=Chua+co+anh"
+                         alt="Preview" class="img-fluid rounded shadow-sm mb-3" style="max-height: 250px; object-fit: cover; width: 100%; border: 3px solid white;" />
+                    <p class="text-muted small mb-0"><i class="fas fa-lightbulb text-warning"></i> Chọn ảnh từ máy tính để xem trước. Ảnh này sẽ làm Banner trên ứng dụng .NET MAUI của du khách.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
+        <script>
+            // JS để hiển thị tên file vừa chọn và xem trước ảnh trực tiếp từ máy tính
+            $(document).ready(function () {
+                $('#customFile').on('change', function () {
+                    // Đổi chữ "Chưa chọn file..." thành tên file thực tế
+                    var fileName = $(this).val().split('\\').pop();
+                    $(this).next('.custom-file-label').addClass("selected").html(fileName);
+
+                    // Load ảnh lên khung Preview bên phải
+                    var file = this.files[0];
+                    if (file) {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            $('#ImagePreview').attr('src', e.target.result);
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            });
+        </script>
+    }

@@ -1,0 +1,150 @@
+﻿@model TravelGuide.Web.Models.POI
+
+@{
+    ViewData["Title"] = "Thêm Địa điểm (POI) mới";
+}
+
+<div class="container-fluid mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-primary font-weight-bold"><i class="fas fa-map-marker-alt"></i> Thêm Địa điểm (POI)</h3>
+        <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow border-0" style="border-radius: 20px;">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thông tin Địa điểm</h6>
+                </div>
+                <div class="card-body p-4 bg-light">
+                    <form asp-action="Create">
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold">Tên Địa điểm</label>
+                            <input asp-for="Name" class="form-control" placeholder="Ví dụ: Chợ Bến Thành" required />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold">Mô tả chi tiết</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 form-group">
+                                <label class="font-weight-bold">Vĩ độ (Latitude)</label>
+                                <input asp-for="Latitude" id="latInput" class="form-control bg-white" readonly placeholder="Click trên bản đồ..." required />
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label class="font-weight-bold">Kinh độ (Longitude)</label>
+                                <input asp-for="Longitude" id="lngInput" class="form-control bg-white" readonly placeholder="Click trên bản đồ..." required />
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold text-danger"><i class="fas fa-broadcast-tower"></i> Bán kính nhận diện Geofence (mét)</label>
+                            <p class="small text-muted mb-2">Kéo thanh trượt hoặc nhập số để xem vòng sáng trên bản đồ thay đổi.</p>
+                            <div class="d-flex align-items-center">
+                                <input type="range" class="custom-range w-75 mr-3" id="radiusSlider" min="10" max="500" value="50">
+                                <input asp-for="Radius" id="radiusInput" class="form-control font-weight-bold text-center w-25 text-danger" value="50" required />
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 font-weight-bold" style="border-radius: 12px;">
+                            <i class="fas fa-save"></i> Lưu Điểm Đến
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card shadow border-0" style="border-radius: 20px; overflow: hidden;">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-success"><i class="fas fa-globe-asia"></i> Bản đồ Định vị GPS</h6>
+                    <span class="badge badge-success px-3 py-2">Click để cắm cờ</span>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map" style="height: 600px; width: 100%; z-index: 1;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        $(document).ready(function () {
+        // 1. Khởi tạo bản đồ 
+        var map = L.map('map').setView([10.7618585, 106.7022361], 17);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        var marker; // Cây ghim
+        var circle; // Vòng tròn Geofence
+
+        // 2. Hàm cập nhật Bản đồ (Vẽ cờ và vẽ vòng tròn)
+        function updateMap(lat, lng, radius) {
+        // Xóa cái cũ đi
+        if (marker) map.removeLayer(marker);
+        if (circle) map.removeLayer(circle);
+
+        // Cắm cờ mới
+        marker = L.marker([lat, lng]).addTo(map);
+                
+        // Vẽ vòng tròn Geofence (Màu đỏ cảnh báo đẹp mắt)
+        circle = L.circle([lat, lng], {
+        color: '#e74a3b', // Viền đỏ
+        fillColor: '#e74a3b', // Ruột đỏ
+        fillOpacity: 0.2, // Độ trong suốt
+        radius: radius // Bán kính lấy từ Form
+        }).addTo(map);
+
+        // Di chuyển camera tới điểm đó
+        map.panTo(new L.LatLng(lat, lng));
+        }
+
+        // 3. Bắt sự kiện CLICK trên bản đồ
+        map.on('click', function (e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        var radius = document.getElementById('radiusInput').value;
+
+        // Điền số vào form bên trái
+        document.getElementById('latInput').value = lat.toFixed(6);
+        document.getElementById('lngInput').value = lng.toFixed(6);
+
+        // Vẽ cờ và vòng
+        updateMap(lat, lng, radius);
+        });
+
+        // 4. Bắt sự kiện khi KÉO THANH TRƯỢT Bán kính
+        $('#radiusSlider').on('input', function () {
+        var newRadius = $(this).val();
+        $('#radiusInput').val(newRadius); // Đồng bộ số vào ô input
+                
+        var lat = $('#latInput').val();
+        var lng = $('#lngInput').val();
+                
+        // Nếu đã cắm cờ rồi thì vẽ lại vòng tròn to/nhỏ ngay lập tức
+        if(lat && lng) {
+        updateMap(lat, lng, newRadius);
+        }
+        });
+
+        // 5. Bắt sự kiện khi GÕ SỐ trực tiếp vào ô Bán kính
+        $('#radiusInput').on('input', function () {
+        var newRadius = $(this).val();
+        $('#radiusSlider').val(newRadius); // Đồng bộ ngược lại thanh trượt
+                
+        var lat = $('#latInput').val();
+        var lng = $('#lngInput').val();
+        if(lat && lng) {
+        updateMap(lat, lng, newRadius);
+        }
+        });
+        });
+    </script>
+}
