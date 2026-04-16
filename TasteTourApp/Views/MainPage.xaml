@@ -15,47 +15,77 @@
                  ZIndex="0"
                  Navigating="BanDoWebView_Navigating" />
 
-        <!-- ===== LAYER 1: THANH TÌM KIẾM ===== -->
+        <!-- ===== LAYER 1: THANH TÌM KIẾM + SYNC STATUS ===== -->
         <VerticalStackLayout ZIndex="1" VerticalOptions="Start" Spacing="0">
-            <Border BackgroundColor="White" StrokeThickness="0" Padding="16,16,16,14">
+            <Border BackgroundColor="White" StrokeThickness="0" Padding="16,16,16,10">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,2" Radius="12" Opacity="0.06" />
                 </Border.Shadow>
 
-                <!-- Search bar + Avatar trên cùng 1 hàng -->
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" VerticalOptions="Center">
+                <VerticalStackLayout Spacing="8">
 
-                    <!-- Thanh tìm kiếm -->
-                    <Border Grid.Column="0" BackgroundColor="White"
-                            StrokeShape="RoundRectangle 16"
-                            Stroke="#E8E4DE" StrokeThickness="1" Padding="14,0">
-                        <Border.Shadow>
-                            <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.08" />
-                        </Border.Shadow>
-                        <Grid ColumnDefinitions="Auto,*,Auto" HeightRequest="48">
-                            <Label Grid.Column="0" Text="🔍" VerticalOptions="Center"
-                                   FontSize="16" Margin="0,0,8,0" />
-                            <Label x:Name="LblSearchPlaceholder" Grid.Column="1"
-                                   Text="Tìm quán, địa điểm..."
-                                   VerticalOptions="Center" FontSize="14" TextColor="#AAAAAA" />
-                            <Border Grid.Column="2" BackgroundColor="#2D6A4F"
-                                    StrokeShape="RoundRectangle 10" StrokeThickness="0"
-                                    WidthRequest="32" HeightRequest="32" VerticalOptions="Center">
-                                <Label Text="🔍" TextColor="White" FontSize="15"
-                                       HorizontalOptions="Center" VerticalOptions="Center" />
-                            </Border>
-                        </Grid>
+                    <!-- Search bar + Avatar + Nút Refresh trên cùng 1 hàng -->
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10" VerticalOptions="Center">
+
+                        <!-- Thanh tìm kiếm -->
+                        <Border Grid.Column="0" BackgroundColor="White"
+                                StrokeShape="RoundRectangle 16"
+                                Stroke="#E8E4DE" StrokeThickness="1" Padding="14,0">
+                            <Border.Shadow>
+                                <Shadow Brush="Black" Offset="0,2" Radius="8" Opacity="0.08" />
+                            </Border.Shadow>
+                            <Grid ColumnDefinitions="Auto,*" HeightRequest="48">
+                                <Label Grid.Column="0" Text="🔍" VerticalOptions="Center"
+                                       FontSize="16" Margin="0,0,8,0" />
+                                <Label x:Name="LblSearchPlaceholder" Grid.Column="1"
+                                       Text="Tìm quán, địa điểm..."
+                                       VerticalOptions="Center" FontSize="14" TextColor="#AAAAAA" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Nút Sync thủ công -->
+                        <Border x:Name="BtnSyncManual"
+                                Grid.Column="1"
+                                BackgroundColor="#F0FFF4"
+                                Stroke="#A7F3D0" StrokeThickness="1.5"
+                                StrokeShape="RoundRectangle 14"
+                                WidthRequest="42" HeightRequest="42"
+                                VerticalOptions="Center">
+                            <Label x:Name="LblSyncIcon" Text="↻" FontSize="20"
+                                   TextColor="#2D6A4F"
+                                   HorizontalOptions="Center" VerticalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="BtnSyncManual_Tapped" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                        </Border>
+
+                        <!-- Avatar user -->
+                        <Border Grid.Column="2" BackgroundColor="#20b7e7d2" Stroke="#b7e7d2" StrokeThickness="2"
+                                StrokeShape="RoundRectangle 24"
+                                WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
+                            <Label Text="👤" FontSize="18" TextColor="#376454"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+
+                    </Grid>
+
+                    <!-- Sync Status Badge -->
+                    <Border x:Name="SyncStatusBadge"
+                            IsVisible="False"
+                            BackgroundColor="#F0FFF4"
+                            StrokeShape="RoundRectangle 10"
+                            Stroke="#A7F3D0" StrokeThickness="1"
+                            Padding="12,5"
+                            HorizontalOptions="Start">
+                        <Label x:Name="LblSyncStatus"
+                               Text="🔄 Đang đồng bộ..."
+                               FontSize="11"
+                               FontAttributes="Bold"
+                               TextColor="#2D6A4F" />
                     </Border>
 
-                    <!-- Avatar user -->
-                    <Border Grid.Column="1" BackgroundColor="#20b7e7d2" Stroke="#b7e7d2" StrokeThickness="2"
-                            StrokeShape="RoundRectangle 24"
-                            WidthRequest="48" HeightRequest="48" VerticalOptions="Center">
-                        <Label Text="👤" FontSize="20" TextColor="#376454"
-                               HorizontalOptions="Center" VerticalOptions="Center" />
-                    </Border>
-
-                </Grid>
+                </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>
 

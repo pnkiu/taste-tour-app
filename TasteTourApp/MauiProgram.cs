@@ -22,6 +22,8 @@ namespace TasteTourApp
             // ── Đăng ký services ──────────────────────────────────────
             builder.Services.AddSingleton<DatabaseService>();
             builder.Services.AddSingleton<GeofenceEngine>();
+            builder.Services.AddSingleton<ApiService>();
+            builder.Services.AddSingleton<SyncService>();
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<SavedPage>();
 

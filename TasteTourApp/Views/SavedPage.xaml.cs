@@ -8,6 +8,7 @@ public partial class SavedPage : ContentPage
 {
     private readonly DatabaseService _dbService;
     private readonly GeofenceEngine _geofenceEngine;
+    private readonly SyncService _syncService;
     private List<QuanAn> _allSaved = new();
 
     // Emoji và màu theo loại quán (giữ đồng bộ với MainPage)
@@ -18,11 +19,12 @@ public partial class SavedPage : ContentPage
         { "Sushi",  ("🍱", "#4A1942", "🍱 Sushi") },
     };
 
-    public SavedPage(DatabaseService dbService, GeofenceEngine geofenceEngine)
+    public SavedPage(DatabaseService dbService, GeofenceEngine geofenceEngine, SyncService syncService)
     {
         InitializeComponent();
         _dbService = dbService;
         _geofenceEngine = geofenceEngine;
+        _syncService = syncService;
     }
 
     protected override async void OnAppearing()
@@ -256,7 +258,7 @@ public partial class SavedPage : ContentPage
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new MainPage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new MainPage(_dbService, _geofenceEngine, _syncService));
         }
     }
 
@@ -265,7 +267,7 @@ public partial class SavedPage : ContentPage
         if (Application.Current != null)
         {
             // Sang TourPage, mang theo 2 công cụ
-            Application.Current.MainPage = new NavigationPage(new TourPage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new TourPage(_dbService, _geofenceEngine, _syncService));
         }
     }
 
@@ -274,7 +276,7 @@ public partial class SavedPage : ContentPage
         if (Application.Current != null)
         {
             // Sang ProfilePage, mang theo 2 công cụ
-            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine, _syncService));
         }
     }
 }

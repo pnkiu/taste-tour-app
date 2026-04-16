@@ -7,11 +7,14 @@ public partial class TourPage : ContentPage
 {
     private readonly DatabaseService _dbService;
     private readonly GeofenceEngine _geofenceEngine;
-    public TourPage(DatabaseService dbService, GeofenceEngine geofenceEngine)
+    private readonly SyncService _syncService;
+
+    public TourPage(DatabaseService dbService, GeofenceEngine geofenceEngine, SyncService syncService)
     {
         InitializeComponent();
         _dbService = dbService;
         _geofenceEngine = geofenceEngine;
+        _syncService = syncService;
     }
 
     // ============================================================
@@ -21,7 +24,7 @@ public partial class TourPage : ContentPage
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new MainPage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new MainPage(_dbService, _geofenceEngine, _syncService));
         }
     }
 
@@ -40,7 +43,7 @@ public partial class TourPage : ContentPage
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new MainPage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new MainPage(_dbService, _geofenceEngine, _syncService));
         }
     }
 
@@ -48,7 +51,7 @@ public partial class TourPage : ContentPage
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new SavedPage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new SavedPage(_dbService, _geofenceEngine, _syncService));
         }
     }
 
@@ -56,7 +59,7 @@ public partial class TourPage : ContentPage
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine, _syncService));
         }
     }
 }

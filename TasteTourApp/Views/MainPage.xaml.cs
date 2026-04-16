@@ -8,9 +8,10 @@ namespace TasteTourApp.Views
     {
         private readonly DatabaseService _dbService;
         private readonly GeofenceEngine _geofenceEngine;
-    private List<QuanAn> _danhSachQuan = new();
-    private QuanAn? _quanDangChon = null;
-    private bool _sheetDangMo = false;
+        private readonly SyncService _syncService;
+        private List<QuanAn> _danhSachQuan = new();
+        private QuanAn? _quanDangChon = null;
+        private bool _sheetDangMo = false;
 
     // TTS (Text-to-Speech)
     private CancellationTokenSource? _ttsCts = null;
@@ -232,15 +233,13 @@ namespace TasteTourApp.Views
     // ============================================================
     //  CONSTRUCTOR
     // ============================================================
-    public MainPage(DatabaseService dbService, GeofenceEngine geofenceEngine)
+    public MainPage(DatabaseService dbService, GeofenceEngine geofenceEngine, SyncService syncService)
     {
         InitializeComponent();
 
         _dbService = dbService;
         _geofenceEngine = geofenceEngine;
-
-        // ── Wire GeofenceEngine events ────────────────────────────────
-        
+        _syncService = syncService;
 
         // FIX: Ẩn sheet ngay khi khởi tạo bằng cách đẩy xuống ngoài màn hình
         TheChiTiet.SizeChanged += OnSheetSizeChanged;
@@ -304,11 +303,19 @@ namespace TasteTourApp.Views
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+
+        // ── Wire events ───────────────────────────────────────────
+        _geofenceEngine.PoiTriggered += OnPoiTriggered;
+        _geofenceEngine.NearestPoiChanged += OnNearestPoiChanged;
+        _syncService.SyncStatusChanged += OnSyncStatusChanged;
+
+        // Load dữ liệu local trước (hiển thị ngay lập tức)
         await LoadDuLieuTuKho();
         _ = GetUserLocationAsync(); // Fire and forget
-            _geofenceEngine.PoiTriggered += OnPoiTriggered;
-            _geofenceEngine.NearestPoiChanged += OnNearestPoiChanged;
-        }
+
+        // Đồng bộ từ API sau (không chặn UI)
+        _ = _syncService.SyncAsync();
+    }
 
     // ============================================================
     //  LOAD DỮ LIỆU
@@ -862,7 +869,7 @@ namespace TasteTourApp.Views
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new SavedPage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new SavedPage(_dbService, _geofenceEngine, _syncService));
         }
     }
 
@@ -870,7 +877,7 @@ namespace TasteTourApp.Views
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new TourPage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new TourPage(_dbService, _geofenceEngine, _syncService));
         }
     }
 
@@ -878,7 +885,7 @@ namespace TasteTourApp.Views
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine, _syncService));
         }
     }
 
@@ -901,14 +908,79 @@ namespace TasteTourApp.Views
         await BtnHeartPoi.ScaleTo(1.0, 100);
     }
 
-        // Thêm hàm này để "rút tai nghe" khi trang này bị đóng/chuyển đi
+        // ============================================================
+        //  SYNC SERVICE HANDLERS
+        // ============================================================
+        private async void OnSyncStatusChanged(object? sender, SyncResult result)
+        {
+            await ShowSyncBadge(result);
+
+            // Nếu sync thành công → reload danh sách và bản đồ
+            if (result.IsSuccess)
+            {
+                await LoadDuLieuTuKho();
+                // Cập nhật lại khoảng cách gần nhất nếu đã có GPS
+                if (_hasUserLocation)
+                    await HighlightNearestPoi();
+            }
+        }
+
+        /// <summary>
+        /// Hiển thị badge trạng thái sync và tự ẩn sau 3 giây khi thành công.
+        /// </summary>
+        private async Task ShowSyncBadge(SyncResult result)
+        {
+            // Cập nhật màu sắc và text theo trạng thái
+            (string bgColor, string strokeColor, string textColor) = result.Status switch
+            {
+                SyncStatus.Syncing => ("#F0FFF4", "#A7F3D0", "#2D6A4F"),
+                SyncStatus.Success => ("#F0FFF4", "#A7F3D0", "#1B7340"),
+                SyncStatus.Offline => ("#FFF8E1", "#FFE082", "#8B6914"),
+                SyncStatus.Error   => ("#FFF0F0", "#FFCDD2", "#C62828"),
+                _                  => ("#F0FFF4", "#A7F3D0", "#2D6A4F")
+            };
+
+            SyncStatusBadge.BackgroundColor = Color.FromArgb(bgColor);
+            SyncStatusBadge.Stroke = Color.FromArgb(strokeColor);
+            LblSyncStatus.TextColor = Color.FromArgb(textColor);
+            LblSyncStatus.Text = result.StatusText;
+            SyncStatusBadge.IsVisible = true;
+            SyncStatusBadge.Opacity = 0;
+            await SyncStatusBadge.FadeTo(1, 200);
+
+            // Nút sync: disable khi đang sync, enable sau
+            BtnSyncManual.Opacity = result.Status == SyncStatus.Syncing ? 0.4 : 1.0;
+            LblSyncIcon.Text = result.Status == SyncStatus.Syncing ? "⏳" : "↻";
+
+            // Tự ẩn sau 3 giây nếu không phải trạng thái lỗi
+            if (result.Status != SyncStatus.Syncing && result.Status != SyncStatus.Error)
+            {
+                await Task.Delay(3000);
+                await SyncStatusBadge.FadeTo(0, 400);
+                SyncStatusBadge.IsVisible = false;
+            }
+        }
+
+        private async void BtnSyncManual_Tapped(object sender, EventArgs e)
+        {
+            // Không cho phép nhấn lại khi đang sync
+            if (BtnSyncManual.Opacity < 1.0) return;
+
+            // Animation nhỏ
+            await BtnSyncManual.ScaleTo(0.9, 80);
+            await BtnSyncManual.ScaleTo(1.0, 80);
+
+            _ = _syncService.SyncAsync();
+        }
+
+        // ── Hủy đăng ký sự kiện khi trang bị đóng/chuyển (chống memory leak) ──
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
 
-            // Hủy đăng ký sự kiện để chống bóng ma (Memory Leak)
             _geofenceEngine.PoiTriggered -= OnPoiTriggered;
             _geofenceEngine.NearestPoiChanged -= OnNearestPoiChanged;
+            _syncService.SyncStatusChanged -= OnSyncStatusChanged;
         }
     }
 }

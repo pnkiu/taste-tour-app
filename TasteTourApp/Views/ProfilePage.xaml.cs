@@ -9,18 +9,21 @@ public partial class ProfilePage : ContentPage
 {
     private readonly DatabaseService _dbService;
     private readonly GeofenceEngine _geofenceEngine;
-    public ProfilePage(DatabaseService dbService, GeofenceEngine geofenceEngine)
+    private readonly SyncService _syncService;
+
+    public ProfilePage(DatabaseService dbService, GeofenceEngine geofenceEngine, SyncService syncService)
     {
         InitializeComponent();
         _dbService = dbService;
         _geofenceEngine = geofenceEngine;
+        _syncService = syncService;
     }
 
     private void NavExplore_Tapped(object sender, EventArgs e)
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new MainPage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new MainPage(_dbService, _geofenceEngine, _syncService));
         }
     }
 
@@ -28,7 +31,7 @@ public partial class ProfilePage : ContentPage
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new TourPage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new TourPage(_dbService, _geofenceEngine, _syncService));
         }
     }
 
@@ -36,7 +39,7 @@ public partial class ProfilePage : ContentPage
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new SavedPage(_dbService, _geofenceEngine));
+            Application.Current.MainPage = new NavigationPage(new SavedPage(_dbService, _geofenceEngine, _syncService));
         }
     }
 
