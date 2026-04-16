@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +16,12 @@ namespace TravelGuide.Web.Controllers
     public class POIsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public POIsController(ApplicationDbContext context)
+        public POIsController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
+            _env = env;
         }
 
         // GET: POIs
@@ -87,16 +92,53 @@ namespace TravelGuide.Web.Controllers
         }
 
         // POST: POIs/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description,Latitude,Longitude,Radius,Priority,ImageUrl,AudioContent,MapLink")] POI pOI)
+        public async Task<IActionResult> Edit(int id,
+            [Bind("Id,Name,Description,Latitude,Longitude,Radius,Priority,ImageUrl,AudioContent,MapLink")] POI pOI,
+            IFormFile? imageFile,
+            IFormFile? audioFile)
         {
             if (id != pOI.Id)
             {
                 return NotFound();
             }
+
+            // Xử lý upload ảnh nếu người dùng chọn file mới
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "pois");
+                Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(imageFile.FileName)}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(stream);
+                }
+
+                pOI.ImageUrl = $"/uploads/pois/{uniqueFileName}";
+            }
+            // Nếu không chọn file mới, giữ nguyên ImageUrl từ hidden input
+
+            // Xử lý upload audio nếu người dùng chọn file mới
+            if (audioFile != null && audioFile.Length > 0)
+            {
+                var audiosFolder = Path.Combine(_env.WebRootPath, "uploads", "audios");
+                Directory.CreateDirectory(audiosFolder);
+
+                var uniqueAudioName = $"{Guid.NewGuid()}_{Path.GetFileName(audioFile.FileName)}";
+                var audioPath = Path.Combine(audiosFolder, uniqueAudioName);
+
+                using (var stream = new FileStream(audioPath, FileMode.Create))
+                {
+                    await audioFile.CopyToAsync(stream);
+                }
+
+                pOI.AudioContent = $"/uploads/audios/{uniqueAudioName}";
+            }
+            // Nếu không chọn file mới, giữ nguyên AudioContent từ hidden input
 
             if (ModelState.IsValid)
             {

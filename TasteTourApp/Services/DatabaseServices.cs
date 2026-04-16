@@ -12,7 +12,8 @@ namespace TasteTourApp.Services
         // Tăng số này lên mỗi khi muốn reset data (ví dụ đổi tọa độ, thêm quán)
         // v6: Thêm cột IsSaved vào QuanAn
         // v9: Hỗ trợ SyncTuApi — không cần seed cứng nữa nếu có API
-        private const int DATA_VERSION = 9;
+        // v10: Thêm cột AudioContent (file audio từ web)
+        private const int DATA_VERSION = 10;
 
         private SQLiteAsyncConnection _db;
         private bool _daKhoiTao = false;
@@ -185,6 +186,20 @@ namespace TasteTourApp.Services
 
             int added = 0;
             int updated = 0;
+            int deleted = 0;
+
+            var apiIds = apiData.Where(q => !string.IsNullOrEmpty(q.Id) && q.Id != "VK_VERSION")
+                        .Select(q => q.Id).ToList();
+
+            var localPois = await _db.Table<QuanAn>().Where(q => q.Id != "VK_VERSION").ToListAsync();
+            foreach (var local in localPois)
+            {
+                if (!apiIds.Contains(local.Id))
+                {
+                    await _db.DeleteAsync(local);
+                    deleted++;
+                }
+            }
 
             foreach (var apiQuan in apiData)
             {
@@ -197,10 +212,9 @@ namespace TasteTourApp.Services
 
                 if (existing != null)
                 {
-                    // ── CẬP NHẬT: giữ IsSaved của người dùng ──────────
-                    apiQuan.IsSaved = existing.IsSaved;       // bảo toàn yêu thích
-                    apiQuan.ThuTuHienThi = existing.ThuTuHienThi; // giữ thứ tự nếu không có từ API
-
+                    // CẬP NHẬT: giữ IsSaved của người dùng
+                    apiQuan.IsSaved = existing.IsSaved;
+                    apiQuan.ThuTuHienThi = existing.ThuTuHienThi;
                     await _db.UpdateAsync(apiQuan);
                     updated++;
                 }
@@ -212,7 +226,7 @@ namespace TasteTourApp.Services
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine($"[DB] SyncTuApi: +{added} mới, ~{updated} cập nhật");
+            System.Diagnostics.Debug.WriteLine($"[DB] SyncTuApi: +{added} mới, ~{updated} cập nhật, -{deleted} đã xóa");
             return (added, updated);
         }
     }

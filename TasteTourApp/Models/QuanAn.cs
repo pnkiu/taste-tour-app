@@ -27,6 +27,9 @@ namespace TasteTourApp.Models
         [JsonPropertyName("imageUrl")]
         public string HinhAnh { get; set; }
 
+        [JsonPropertyName("audioContent")]
+        public string AudioContent { get; set; }
+
         public string LoaiQuan { get; set; }      // "Oc" / "HaiSan" / "Sushi"
         [JsonPropertyName("radius")]
         public double BanKinhMet { get; set; } = 50;  // Geofence radius (mét)

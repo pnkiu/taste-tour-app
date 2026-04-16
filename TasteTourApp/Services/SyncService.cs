@@ -109,12 +109,12 @@ namespace TasteTourApp.Services
 
                 // 3. Lấy dữ liệu từ API
                 var apiData = await _apiService.FetchPOIsAsync();
-                if (apiData == null || apiData.Count == 0)
+                if (apiData == null)
                 {
                     var errorResult = new SyncResult
                     {
                         Status = SyncStatus.Error,
-                        ErrorMessage = "API trả về dữ liệu rỗng"
+                        ErrorMessage = "Không thể đọc dữ liệu từ API"
                     };
                     RaiseEvent(errorResult);
                     return errorResult;

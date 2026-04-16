@@ -1,6 +1,9 @@
 using TasteTourApp.Models;
 using TasteTourApp.Services;
 using TasteTourApp.Services.Geofence;
+#if ANDROID
+using Android.Media;
+#endif
 
 namespace TasteTourApp.Views
 {
@@ -16,6 +19,11 @@ namespace TasteTourApp.Views
     // TTS (Text-to-Speech)
     private CancellationTokenSource? _ttsCts = null;
     private bool _dangPhatTTS = false;
+
+    // Android MediaPlayer — phát file audio từ server
+#if ANDROID
+    private Android.Media.MediaPlayer? _mediaPlayer = null;
+#endif
 
     // Bottom sheet drag states
     private double _sheetMinHeight = 180;     // Peek height (chỉ thấy 1-2 cards)
@@ -335,8 +343,8 @@ namespace TasteTourApp.Views
 
     // 🧪 TỌA ĐỘ MẪU — thay đổi tại đây để test các vị trí khác nhau
     // Vị trí này nằm trên đường Vĩnh Khánh, gần các quán ốc
-    private const double MOCK_LAT = 10.761695;
-        private const double MOCK_LNG = 106.702222;
+    private const double MOCK_LAT = 10.761864279381065;
+        private const double MOCK_LNG = 106.70203267361181;
 
         private async Task GetUserLocationAsync()
     {
@@ -618,7 +626,9 @@ namespace TasteTourApp.Views
             ? $"{TinhKhoangCach(_userLat, _userLng, quan.ViDo, quan.KinhDo):F0}m · Vĩnh Khánh, Q.4"
             : "Vĩnh Khánh, Q.4";
         var (_, currentLangName, _) = GetCurrentTtsLang();
-        LblAudioSub.Text = $"{currentLangName} · TTS";
+        LblAudioSub.Text = !string.IsNullOrWhiteSpace(quan.AudioContent)
+            ? "File Audio · MP3"
+            : $"{currentLangName} · TTS";
         LblPlayIcon.Text = "▶";
         LblRating.Text = "4.5";
 
@@ -632,7 +642,13 @@ namespace TasteTourApp.Views
 
         if (!string.IsNullOrEmpty(quan.HinhAnh))
         {
-            ImgQuan.Source = quan.HinhAnh;
+            // HinhAnh là path tương đối "/uploads/pois/xxx.jpg" (từ web)
+            // hoặc URL đầy đủ — cần build URL đầy đủ để MAUI load được
+            string imageUrl = quan.HinhAnh.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                ? quan.HinhAnh
+                : $"http://10.0.2.2:5220{quan.HinhAnh}";
+
+            ImgQuan.Source = ImageSource.FromUri(new Uri(imageUrl));
             ImgQuan.IsVisible = true;
         }
         else
@@ -750,10 +766,21 @@ namespace TasteTourApp.Views
     }
 
     /// <summary>
-    /// Dừng TTS nếu đang phát
+    /// Dừng toàn bộ audio (cả file lẫn TTS) đang phát
     /// </summary>
     private async Task StopTts()
     {
+        // Dừng MediaPlayer file audio nếu đang phát
+#if ANDROID
+        if (_mediaPlayer != null)
+        {
+            try { _mediaPlayer.Stop(); } catch { }
+            _mediaPlayer.Release();
+            _mediaPlayer = null;
+        }
+#endif
+
+        // Dừng TTS nếu đang phát
         if (_ttsCts != null)
         {
             _ttsCts.Cancel();
@@ -768,45 +795,45 @@ namespace TasteTourApp.Views
     }
 
     /// <summary>
-    /// Phát TTS nội dung MoTa của POI đang chọn
+    /// Phát audio: ưu tiên file audio từ server, fallback về TTS nếu không có
     /// </summary>
     private async Task PhatTts()
     {
-        if (_quanDangChon == null || string.IsNullOrWhiteSpace(_quanDangChon.MoTa)) return;
+        if (_quanDangChon == null) return;
 
-        // Tạo CancellationToken mới
-        _ttsCts = new CancellationTokenSource();
         _dangPhatTTS = true;
-
-        // Lấy ngôn ngữ đã chọn trong Cài đặt
-        var (langCode, langName, langPrefix) = GetCurrentTtsLang();
-
-        // Cập nhật UI
         LblPlayIcon.Text = "⏸";
-        LblAudioSub.Text = $"▶ Đang phát · {langName}...";
 
+        // ── TRƯỜNG HỢP 1: Có file audio từ server → phát qua MediaPlayer ──
+        if (!string.IsNullOrWhiteSpace(_quanDangChon.AudioContent))
+        {
+            await PhatFileAudio(_quanDangChon.AudioContent);
+            return;
+        }
+
+        // ── TRƯỜNG HỢP 2: Không có file audio → fallback TTS từ mô tả ──
+        if (string.IsNullOrWhiteSpace(_quanDangChon.MoTa))
+        {
+            _dangPhatTTS = false;
+            LblPlayIcon.Text = "▶";
+            LblAudioSub.Text = "Chưa có nội dung audio";
+            return;
+        }
+
+        var (langCode, langName, langPrefix) = GetCurrentTtsLang();
+        LblAudioSub.Text = $"▶ Đang đọc · {langName}...";
+
+        _ttsCts = new CancellationTokenSource();
         try
         {
-            // Cấu hình giọng đọc
-            var options = new SpeechOptions
-            {
-                Pitch = 1.0f,
-                Volume = 1.0f,
-            };
-
-            // Tìm locale phù hợp với ngôn ngữ đã chọn
+            var options = new SpeechOptions { Pitch = 1.0f, Volume = 1.0f };
             var locales = await TextToSpeech.GetLocalesAsync();
             var matchedLocale = locales?.FirstOrDefault(l =>
                 l.Language.StartsWith(langPrefix, StringComparison.OrdinalIgnoreCase));
-            if (matchedLocale != null)
-            {
-                options.Locale = matchedLocale;
-            }
+            if (matchedLocale != null) options.Locale = matchedLocale;
 
-            // Đọc nội dung MoTa
             await TextToSpeech.SpeakAsync(_quanDangChon.MoTa, options, _ttsCts.Token);
 
-            // Đọc xong bình thường (không bị cancel)
             if (_dangPhatTTS)
             {
                 _dangPhatTTS = false;
@@ -814,16 +841,88 @@ namespace TasteTourApp.Views
                 LblAudioSub.Text = $"Đã phát xong · {langName}";
             }
         }
-        catch (OperationCanceledException)
-        {
-            // Bị hủy bởi StopTts() — UI đã reset trong StopTts
-        }
+        catch (OperationCanceledException) { /* bị hủy bởi StopTts */ }
         catch (Exception ex)
         {
             _dangPhatTTS = false;
             LblPlayIcon.Text = "▶";
             LblAudioSub.Text = $"Lỗi TTS: {ex.Message}";
         }
+    }
+
+    /// <summary>
+    /// Phát file audio URL từ server qua Android MediaPlayer
+    /// </summary>
+    private async Task PhatFileAudio(string audioPath)
+    {
+        string baseUrl = "http://10.0.2.2:5220";
+        string audioUrl = audioPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+            ? audioPath
+            : $"{baseUrl}{audioPath}";
+
+        LblAudioSub.Text = "▶ Đang phát audio...";
+
+#if ANDROID
+        var tcs = new TaskCompletionSource<bool>();
+        try
+        {
+            // Dọn player cũ nếu có
+            if (_mediaPlayer != null)
+            {
+                try { _mediaPlayer.Stop(); } catch { }
+                _mediaPlayer.Release();
+                _mediaPlayer = null;
+            }
+
+            _mediaPlayer = new Android.Media.MediaPlayer();
+            _mediaPlayer.SetAudioAttributes(
+                new Android.Media.AudioAttributes.Builder()
+                    .SetContentType(Android.Media.AudioContentType.Music)
+                    .SetUsage(Android.Media.AudioUsageKind.Media)
+                    .Build());
+
+            await _mediaPlayer.SetDataSourceAsync(audioUrl);
+            _mediaPlayer.PrepareAsync();
+
+            _mediaPlayer.Prepared += (s, e) => _mediaPlayer.Start();
+
+            _mediaPlayer.Completion += (s, e) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    _dangPhatTTS = false;
+                    LblPlayIcon.Text = "▶";
+                    LblAudioSub.Text = "Đã phát xong";
+                });
+                tcs.TrySetResult(true);
+            };
+
+            _mediaPlayer.Error += (s, e) =>
+            {
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    _dangPhatTTS = false;
+                    LblPlayIcon.Text = "▶";
+                    LblAudioSub.Text = $"Lỗi phát audio ({e.What})";
+                });
+                tcs.TrySetResult(false);
+            };
+
+            await tcs.Task;
+        }
+        catch (Exception ex)
+        {
+            _dangPhatTTS = false;
+            LblPlayIcon.Text = "▶";
+            LblAudioSub.Text = $"Lỗi: {ex.Message}";
+        }
+#else
+        // Fallback cho các platform khác: dùng TTS
+        _dangPhatTTS = false;
+        LblAudioSub.Text = "(Audio chỉ hỗ trợ trên Android)";
+        LblPlayIcon.Text = "▶";
+        await Task.CompletedTask;
+#endif
     }
 
     // ============================================================

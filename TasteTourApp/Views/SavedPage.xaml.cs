@@ -101,9 +101,14 @@ public partial class SavedPage : ContentPage
             // Ảnh nếu có
             if (!string.IsNullOrEmpty(quan.HinhAnh))
             {
+                // HinhAnh là path tương đối "/uploads/pois/xxx.jpg" từ web → cần URL đầy đủ
+                string imageUrl = quan.HinhAnh.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                    ? quan.HinhAnh
+                    : $"http://10.0.2.2:5220{quan.HinhAnh}";
+
                 heroGrid.Children.Add(new Image
                 {
-                    Source = quan.HinhAnh,
+                    Source = ImageSource.FromUri(new Uri(imageUrl)),
                     Aspect = Aspect.AspectFill,
                     VerticalOptions = LayoutOptions.Fill,
                     HorizontalOptions = LayoutOptions.Fill

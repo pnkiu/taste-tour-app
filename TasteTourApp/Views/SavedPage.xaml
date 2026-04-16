@@ -11,8 +11,7 @@
 
         <!-- ===== MAIN CONTENT ===== -->
         <ScrollView VerticalScrollBarVisibility="Never" Margin="0,0,0,88">
-            <VerticalStackLayout Padding="24" Spacing="0" Margin="0,64,0,0">
-
+            <VerticalStackLayout Padding="24,24,24,48" Spacing="0" Margin="0,64,0,0">
                 <!-- Editorial Header -->
                 <VerticalStackLayout Spacing="6" Margin="0,0,0,20">
                     <Label Text="Yêu thích" FontSize="32" FontAttributes="Bold" TextColor="#2c2f30"/>
@@ -79,8 +78,6 @@
                            LineHeight="1.5"/>
                 </VerticalStackLayout>
 
-                <!-- Bottom padding -->
-                <BoxView HeightRequest="24" Color="Transparent"/>
             </VerticalStackLayout>
         </ScrollView>
 
