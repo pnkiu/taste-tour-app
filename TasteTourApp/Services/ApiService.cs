@@ -9,8 +9,6 @@ namespace TasteTourApp.Services
         private readonly HttpClient _httpClient;
 
         // ── Đổi URL này cho đúng với server của bạn ──────────────────
-        // Android Emulator → 10.0.2.2 trỏ về localhost máy host
-        // Thiết bị thật trên cùng WiFi → dùng IP LAN, ví dụ: 192.168.1.x
         private readonly string _baseUrl = "http://10.0.2.2:5220/api";
 
         public ApiService()
@@ -24,27 +22,19 @@ namespace TasteTourApp.Services
         // ============================================================
         //  KIỂM TRA MẠNG
         // ============================================================
-        /// <summary>Trả về true nếu thiết bị đang có kết nối Internet.</summary>
         public bool IsNetworkAvailable()
         {
             var access = Connectivity.Current.NetworkAccess;
-            return access == NetworkAccess.Internet
-                || access == NetworkAccess.ConstrainedInternet;
+            return access == NetworkAccess.Internet || access == NetworkAccess.ConstrainedInternet;
         }
 
         // ============================================================
         //  LẤY DANH SÁCH POI TỪ API
         // ============================================================
-        /// <summary>
-        /// Fetch danh sách POI từ web quản lý.
-        /// Chỉ lấy dữ liệu về, KHÔNG lưu vào DB — đó là việc của SyncService.
-        /// Trả về list rỗng nếu lỗi mạng hoặc parse thất bại.
-        /// </summary>
         public async Task<List<QuanAn>> FetchPOIsAsync()
         {
             try
             {
-                // Kiểm tra connectivity trước khi gọi
                 if (!IsNetworkAvailable())
                 {
                     System.Diagnostics.Debug.WriteLine("[ApiService] Offline — bỏ qua request.");
@@ -55,18 +45,14 @@ namespace TasteTourApp.Services
                 {
                     PropertyNameCaseInsensitive = true
                 };
-
-                // THÊM DÒNG NÀY ĐỂ KÍCH HOẠT MÁY DỊCH SỐ THÀNH CHỮ
                 jsonOptions.Converters.Add(new IntToStringConverter());
 
-                var response = await _httpClient.GetFromJsonAsync<List<QuanAn>>(
-                    $"{_baseUrl}/POIsApi", jsonOptions);
+                var response = await _httpClient.GetFromJsonAsync<List<QuanAn>>($"{_baseUrl}/POIsApi", jsonOptions);
 
                 return response ?? new List<QuanAn>();
             }
             catch (TaskCanceledException)
             {
-                // Timeout
                 System.Diagnostics.Debug.WriteLine("[ApiService] Request timeout.");
                 return new List<QuanAn>();
             }
@@ -76,12 +62,101 @@ namespace TasteTourApp.Services
                 return new List<QuanAn>();
             }
         }
+
+        // ============================================================
+        //  ĐĂNG NHẬP (API)
+        // ============================================================
+        public async Task<LoginResponse> LoginAsync(string email, string password)
+        {
+            if (!IsNetworkAvailable())
+                return new LoginResponse { Success = false, Message = "Không có kết nối mạng." };
+
+            try
+            {
+                var payload = new { Email = email, Password = password };
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/AuthApi/login", payload);
+
+                var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var result = await response.Content.ReadFromJsonAsync<LoginResponse>(jsonOptions);
+
+                if (result == null)
+                    return new LoginResponse { Success = false, Message = "Lỗi phản hồi từ máy chủ." };
+
+                if (!response.IsSuccessStatusCode && !result.Success && string.IsNullOrEmpty(result.Message))
+                    result.Message = "Tài khoản hoặc mật khẩu không hợp lệ.";
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiService] Lỗi Login: {ex.Message}");
+                return new LoginResponse { Success = false, Message = "Lỗi kết nối đến máy chủ." };
+            }
+        }
+
+        // ============================================================
+        //  ĐĂNG KÝ (API)
+        // ============================================================
+        public async Task<RegisterResponse> RegisterAsync(string fullName, string email, string phone, string password)
+        {
+            if (!IsNetworkAvailable())
+                return new RegisterResponse { Success = false, Message = "Không có kết nối mạng." };
+
+            try
+            {
+                var payload = new
+                {
+                    FullName = fullName,
+                    Email = email,
+                    Phone = phone,
+                    Password = password
+                };
+
+                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/AuthApi/register", payload);
+
+                var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var result = await response.Content.ReadFromJsonAsync<RegisterResponse>(jsonOptions);
+
+                if (result == null)
+                    return new RegisterResponse { Success = false, Message = "Lỗi phản hồi từ máy chủ." };
+
+                // 409 Conflict = email đã tồn tại — server đã trả về message rõ ràng
+                if (!response.IsSuccessStatusCode && !result.Success && string.IsNullOrEmpty(result.Message))
+                    result.Message = "Đăng ký không thành công. Vui lòng thử lại.";
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiService] Lỗi Register: {ex.Message}");
+                return new RegisterResponse { Success = false, Message = "Lỗi kết nối đến máy chủ." };
+            }
+        }
+    } // <--- CLASS ApiService ĐÓNG LẠI Ở ĐÂY CHỨ KHÔNG PHẢI Ở TRÊN
+
+    // ============================================================
+    //  CÁC CLASS MÔ HÌNH DỮ LIỆU (NẰM NGOÀI APISERVICE)
+    // ============================================================
+    public class LoginResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
     }
+
+    public class RegisterResponse
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
+    }
+
     public class IntToStringConverter : System.Text.Json.Serialization.JsonConverter<string>
     {
         public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            // Nếu Web gửi về là một con số (Ví dụ: 1) -> Ép thành chữ ("1")
             if (reader.TokenType == JsonTokenType.Number)
             {
                 return reader.GetInt32().ToString();

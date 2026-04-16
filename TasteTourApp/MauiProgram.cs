@@ -26,6 +26,8 @@ namespace TasteTourApp
             builder.Services.AddSingleton<SyncService>();
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<SavedPage>();
+            builder.Services.AddTransient<LoginPage>();
+            builder.Services.AddTransient<RegisterPage>();
 
 #if DEBUG
             builder.Logging.AddDebug();

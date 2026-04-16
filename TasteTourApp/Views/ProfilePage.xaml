@@ -40,8 +40,8 @@
                         </Border>
                     </Grid>
 
-                    <Label Text="Guest" FontSize="28" FontAttributes="Bold" TextColor="#2c2f30" HorizontalOptions="Center" Margin="0,0,0,4" />
-                    <Label Text="guest@gmail.com" FontSize="14" FontAttributes="Bold" TextColor="#595c5d" HorizontalOptions="Center" />
+                    <Label x:Name="LblUserName" Text="Guest" FontSize="28" FontAttributes="Bold" TextColor="#2c2f30" HorizontalOptions="Center" Margin="0,0,0,4" />
+                    <Label x:Name="LblUserEmail" Text="guest@gmail.com" FontSize="14" FontAttributes="Bold" TextColor="#595c5d" HorizontalOptions="Center" />
                 </VerticalStackLayout>
 
                 <!-- Stats Grid -->

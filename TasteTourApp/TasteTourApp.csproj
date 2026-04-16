@@ -67,4 +67,10 @@
 		<PackageReference Include="Xamarin.GooglePlayServices.Location" Version="121.0.1" Condition="$(TargetFramework.StartsWith('net10.0-android'))" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <MauiXaml Update="Views\RegisterPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	</ItemGroup>
+
 </Project>

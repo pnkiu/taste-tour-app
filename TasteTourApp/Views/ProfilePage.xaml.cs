@@ -19,6 +19,29 @@ public partial class ProfilePage : ContentPage
         _syncService = syncService;
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        bool isLoggedIn = Preferences.Get("is_logged_in", false);
+        if (isLoggedIn)
+        {
+            string email = Preferences.Get("user_email", "guest@gmail.com");
+            // Cắt phần tên từ email để làm username tạm (hoặc dùng role Admin)
+            string name = email.Split('@')[0];
+            // Kí tự đầu viết hoa
+            if(name.Length > 0) name = char.ToUpper(name[0]) + name.Substring(1);
+
+            LblUserName.Text = name;
+            LblUserEmail.Text = email;
+        }
+        else
+        {
+            LblUserName.Text = "Guest";
+            LblUserEmail.Text = "Hi, vui lòng đăng nhập";
+        }
+    }
+
     private void NavExplore_Tapped(object sender, EventArgs e)
     {
         if (Application.Current != null)
@@ -46,9 +69,17 @@ public partial class ProfilePage : ContentPage
     private async void DangXuat_Tapped(object sender, EventArgs e)
     {
         bool answer = await DisplayAlert("Xác nhận", "Bạn có chắc chắn muốn đăng xuất?", "Đồng ý", "Hủy");
-        if (answer && Application.Current != null)
+        if (answer)
         {
-            Application.Current.MainPage = new NavigationPage(new LoginPage());
+            // Xóa thông tin đăng nhập
+            Preferences.Remove("is_logged_in");
+            Preferences.Remove("user_email");
+            Preferences.Remove("user_role");
+
+            if (Application.Current != null)
+            {
+                Application.Current.MainPage = new NavigationPage(new LoginPage());
+            }
         }
     }
 
