@@ -11,7 +11,7 @@ namespace TasteTourApp.Services.Geofence
     /// Luồng hoạt động:
     /// 1. App tải danh sách POI (lat/lng, bán kính, ưu tiên, nội dung thuyết minh).
     /// 2. Khi người dùng di chuyển, gọi OnLocationUpdated() → áp dụng debounce.
-    /// 3. EvaluatePoisAsync: tính khoảng cách tới mọi POI.
+    /// 3. EvaluatePoisAsync: tính khoảng cách tới mọi POI.dotnet workload restore
     ///    - POI gần nhất (bất kể bán kính) → NearestPoiChanged (UI highlight).
     ///    - POI TRONG bán kính + ưu tiên cao + cooldown OK → PoiTriggered Enter.
     /// 4. Narration Engine (MainPage) nhận PoiTriggered → quyết định phát TTS/Audio.

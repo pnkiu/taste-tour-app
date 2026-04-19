@@ -343,8 +343,8 @@ namespace TasteTourApp.Views
 
     // 🧪 TỌA ĐỘ MẪU — thay đổi tại đây để test các vị trí khác nhau
     // Vị trí này nằm trên đường Vĩnh Khánh, gần các quán ốc
-    private const double MOCK_LAT = 10.761864279381065;
-        private const double MOCK_LNG = 106.70203267361181;
+    private const double MOCK_LAT = 10.761626047097499;
+        private const double MOCK_LNG = 106.70232518826722;
 
         private async Task GetUserLocationAsync()
     {
@@ -646,7 +646,7 @@ namespace TasteTourApp.Views
             // hoặc URL đầy đủ — cần build URL đầy đủ để MAUI load được
             string imageUrl = quan.HinhAnh.StartsWith("http", StringComparison.OrdinalIgnoreCase)
                 ? quan.HinhAnh
-                : $"http://10.0.2.2:5220{quan.HinhAnh}";
+                : $"http://192.168.31.240:5220{quan.HinhAnh}";
 
             ImgQuan.Source = ImageSource.FromUri(new Uri(imageUrl));
             ImgQuan.IsVisible = true;
@@ -855,7 +855,7 @@ namespace TasteTourApp.Views
     /// </summary>
     private async Task PhatFileAudio(string audioPath)
     {
-        string baseUrl = "http://10.0.2.2:5220";
+        string baseUrl = "http://192.168.31.240:5220";
         string audioUrl = audioPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)
             ? audioPath
             : $"{baseUrl}{audioPath}";

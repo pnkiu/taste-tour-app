@@ -18,6 +18,9 @@ namespace TasteTourApp.Models
         [JsonPropertyName("description")]
         public string MoTa { get; set; }
 
+        [JsonPropertyName("descriptionEn")]
+        public string MoTaEn { get; set; }
+
         [JsonPropertyName("latitude")]
         public double ViDo {  get; set; }
 
@@ -29,7 +32,8 @@ namespace TasteTourApp.Models
 
         [JsonPropertyName("audioContent")]
         public string AudioContent { get; set; }
-
+        [JsonPropertyName("audioContentEn")]
+        public string AudioContentEn { get; set; }
         public string LoaiQuan { get; set; }      // "Oc" / "HaiSan" / "Sushi"
         [JsonPropertyName("radius")]
         public double BanKinhMet { get; set; } = 50;  // Geofence radius (mét)

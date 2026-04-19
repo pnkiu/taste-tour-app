@@ -8,8 +8,7 @@ namespace TasteTourApp.Services
     {
         private readonly HttpClient _httpClient;
 
-        // ── Đổi URL này cho đúng với server của bạn ──────────────────
-        private readonly string _baseUrl = "http://10.0.2.2:5220/api";
+        private readonly string _baseUrl = "http://192.168.31.240:5220/api";
 
         public ApiService()
         {

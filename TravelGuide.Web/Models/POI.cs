@@ -36,6 +36,13 @@ namespace TravelGuide.Web.Models
         [Display(Name = "File Audio hoặc Script TTS")]
         public string? AudioContent { get; set; }
 
+        // --- Dữ liệu Đa ngôn ngữ (Tiếng Anh) ---
+        [Display(Name = "Mô tả chi tiết (Tiếng Anh)")]
+        public string? DescriptionEn { get; set; }
+
+        [Display(Name = "File Audio Tiếng Anh (Link)")]
+        public string? AudioContentEn { get; set; }
+
         [Display(Name = "Link bản đồ")]
         public string? MapLink { get; set; }
 

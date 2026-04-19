@@ -55,5 +55,18 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+app.Use(async (context, next) =>
+{
+    // Lấy IP của người gọi
+    var clientIp = context.Connection.RemoteIpAddress?.ToString();
+    var apiPath = context.Request.Path;
 
+    
+    Console.ForegroundColor = ConsoleColor.Cyan;
+    Console.WriteLine($"[CO KET NOI] Thiet bi có IP: {clientIp} vua goi du lieu tu {apiPath}");
+    Console.ResetColor(); // Trả lại màu trắng mặc định
+
+    await next();
+});
+app.Urls.Add("http://0.0.0.0:5220");
 app.Run();
