@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using TasteTourApp.Models;
 using TasteTourApp.Services;
 using TasteTourApp.Services.Geofence;
@@ -280,8 +281,8 @@ public partial class SavedPage : ContentPage
     {
         if (Application.Current != null)
         {
-            // Sang ProfilePage, mang theo 2 công cụ
-            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine, _syncService));
+            var deviceService = IPlatformApplication.Current.Services.GetService<DeviceService>();
+            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine, _syncService, deviceService));
         }
     }
 }

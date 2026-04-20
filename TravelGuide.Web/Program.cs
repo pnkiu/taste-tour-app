@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authentication.Cookies; // 1. KHAI BÁO THƯ VIỆN BẢO MẬT TẠI ĐÂY
 using Microsoft.EntityFrameworkCore;
 using TravelGuide.Web.Data; // Đổi TravelGuide.Web thành tên Project của bạn nếu khác
 
@@ -10,18 +9,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // =======================================================
-// --- 2. CẤU HÌNH BẢO MẬT (ĐĂNG NHẬP BẰNG COOKIE) ---
-// =======================================================
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Account/Login"; // Đường dẫn sẽ chuyển tới nếu chưa đăng nhập
-        options.AccessDeniedPath = "/Account/Login";
-        options.ExpireTimeSpan = TimeSpan.FromDays(1); // Thời gian nhớ đăng nhập
-    });
-
-// =======================================================
-// --- BƯỚC 3: THÊM CẤU HÌNH DBCONTEXT Ở ĐÂY (ĐÃ ĐỔI SANG MYSQL) ---
+// --- CẤU HÌNH DBCONTEXT (MySQL) ---
 // =======================================================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -43,25 +31,20 @@ if (!app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 app.UseRouting();
-
-// =======================================================
-// --- 4. GẮN Ổ KHÓA VÀO HỆ THỐNG (BẮT BUỘC ĐÚNG THỨ TỰ NÀY) ---
-// =======================================================
-app.UseAuthentication(); // <-- KIỂM TRA GIẤY TỜ (Xác thực)
-app.UseAuthorization();  // <-- XEM CÓ QUYỀN KHÔNG (Phân quyền)
+app.UseAuthorization();
 
 app.MapStaticAssets();
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Tours}/{action=Index}/{id?}")
     .WithStaticAssets();
+
 app.Use(async (context, next) =>
 {
     // Lấy IP của người gọi
     var clientIp = context.Connection.RemoteIpAddress?.ToString();
     var apiPath = context.Request.Path;
 
-    
     Console.ForegroundColor = ConsoleColor.Cyan;
     Console.WriteLine($"[CO KET NOI] Thiet bi có IP: {clientIp} vua goi du lieu tu {apiPath}");
     Console.ResetColor(); // Trả lại màu trắng mặc định

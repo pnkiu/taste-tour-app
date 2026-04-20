@@ -9,25 +9,10 @@ namespace TravelGuide.Web.Data
         {
         }
 
-        // Bảng POIs trong cơ sở dữ liệu
+        // Các bảng dữ liệu nội dung
         public DbSet<POI> POIs { get; set; }
         public DbSet<Audio> Audios { get; set; }
         public DbSet<Tour> Tours { get; set; }
         public DbSet<TourPOI> TourPOIs { get; set; }
-        public DbSet<User> Users { get; set; } // Bảng người dùng
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-
-            // Seed tài khoản admin mặc định
-            modelBuilder.Entity<User>().HasData(new User
-            {
-                Id = 1,
-                Email = "admin@tastetour.com",
-                PasswordHash = User.HashPassword("123456"),
-                Role = "Admin"
-            });
-        }
     }
 }

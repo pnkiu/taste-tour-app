@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using TasteTourApp.Models;
 using TasteTourApp.Services;
 using TasteTourApp.Services.Geofence;
@@ -984,7 +985,8 @@ namespace TasteTourApp.Views
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine, _syncService));
+            var deviceService = IPlatformApplication.Current.Services.GetService<DeviceService>();
+            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine, _syncService, deviceService));
         }
     }
 

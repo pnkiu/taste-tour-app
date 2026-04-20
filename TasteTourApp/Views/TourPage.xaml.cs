@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using TasteTourApp.Services;
 using TasteTourApp.Services.Geofence;
 
@@ -59,7 +60,8 @@ public partial class TourPage : ContentPage
     {
         if (Application.Current != null)
         {
-            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine, _syncService));
+            var deviceService = IPlatformApplication.Current.Services.GetService<DeviceService>();
+            Application.Current.MainPage = new NavigationPage(new ProfilePage(_dbService, _geofenceEngine, _syncService, deviceService));
         }
     }
 }

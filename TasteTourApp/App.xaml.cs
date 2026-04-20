@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 
 namespace TasteTourApp
 {
@@ -13,10 +12,10 @@ namespace TasteTourApp
         {
             base.OnAppLinkRequestReceived(uri);
 
-            // Kiểm tra xem có đúng là link gọi trang login không (tastetour://login)
+            // Frictionless: QR code dẫn thẳng vào MainPage (tastetour://start)
             if (uri.Scheme.ToLower() == "tastetour" && uri.Host.ToLower() == "start")
             {
-                System.Diagnostics.Debug.WriteLine("[DEEP LINK] Vừa quét mã, đang chuyển thẳng đến trang Đăng nhập...");
+                System.Diagnostics.Debug.WriteLine("[DEEP LINK] Vừa quét mã, chuyển đến MainPage...");
 
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
@@ -46,7 +45,8 @@ namespace TasteTourApp
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            return new Window(new Views.LoginPage());
+            // Frictionless Onboarding: vào thẳng AppShell → MainPage, không qua Login
+            return new Window(new AppShell());
         }
     }
 }

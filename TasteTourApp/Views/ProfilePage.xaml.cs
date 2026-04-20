@@ -10,36 +10,32 @@ public partial class ProfilePage : ContentPage
     private readonly DatabaseService _dbService;
     private readonly GeofenceEngine _geofenceEngine;
     private readonly SyncService _syncService;
+    private readonly DeviceService _deviceService;
 
-    public ProfilePage(DatabaseService dbService, GeofenceEngine geofenceEngine, SyncService syncService)
+    public ProfilePage(DatabaseService dbService, GeofenceEngine geofenceEngine, SyncService syncService, DeviceService deviceService)
     {
         InitializeComponent();
         _dbService = dbService;
         _geofenceEngine = geofenceEngine;
         _syncService = syncService;
+        _deviceService = deviceService;
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
 
-        bool isLoggedIn = Preferences.Get("is_logged_in", false);
-        if (isLoggedIn)
-        {
-            string email = Preferences.Get("user_email", "guest@gmail.com");
-            // Cắt phần tên từ email để làm username tạm (hoặc dùng role Admin)
-            string name = email.Split('@')[0];
-            // Kí tự đầu viết hoa
-            if(name.Length > 0) name = char.ToUpper(name[0]) + name.Substring(1);
+        // Frictionless: hiển thị tên và ID thiết bị thay vì email tài khoản
+        LblUserName.Text = _deviceService.Nickname;
+        LblUserEmail.Text = _deviceService.ShortId;
 
-            LblUserName.Text = name;
-            LblUserEmail.Text = email;
-        }
-        else
-        {
-            LblUserName.Text = "Guest";
-            LblUserEmail.Text = "Hi, vui lòng đăng nhập";
-        }
+        // Cập nhật thông tin thiết bị trong sub-section
+        if (LblDeviceId != null)
+            LblDeviceId.Text = _deviceService.ShortId;
+        if (LblDeviceName != null)
+            LblDeviceName.Text = _deviceService.DeviceModel;
+        if (LblFirstUsed != null)
+            LblFirstUsed.Text = $"Sử dụng từ {_deviceService.FirstUsedDate}";
     }
 
     private void NavExplore_Tapped(object sender, EventArgs e)
@@ -63,23 +59,6 @@ public partial class ProfilePage : ContentPage
         if (Application.Current != null)
         {
             Application.Current.MainPage = new NavigationPage(new SavedPage(_dbService, _geofenceEngine, _syncService));
-        }
-    }
-
-    private async void DangXuat_Tapped(object sender, EventArgs e)
-    {
-        bool answer = await DisplayAlert("Xác nhận", "Bạn có chắc chắn muốn đăng xuất?", "Đồng ý", "Hủy");
-        if (answer)
-        {
-            // Xóa thông tin đăng nhập
-            Preferences.Remove("is_logged_in");
-            Preferences.Remove("user_email");
-            Preferences.Remove("user_role");
-
-            if (Application.Current != null)
-            {
-                Application.Current.MainPage = new NavigationPage(new LoginPage());
-            }
         }
     }
 

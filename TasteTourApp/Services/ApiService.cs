@@ -61,97 +61,11 @@ namespace TasteTourApp.Services
                 return new List<QuanAn>();
             }
         }
-
-        // ============================================================
-        //  ĐĂNG NHẬP (API)
-        // ============================================================
-        public async Task<LoginResponse> LoginAsync(string email, string password)
-        {
-            if (!IsNetworkAvailable())
-                return new LoginResponse { Success = false, Message = "Không có kết nối mạng." };
-
-            try
-            {
-                var payload = new { Email = email, Password = password };
-                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/AuthApi/login", payload);
-
-                var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var result = await response.Content.ReadFromJsonAsync<LoginResponse>(jsonOptions);
-
-                if (result == null)
-                    return new LoginResponse { Success = false, Message = "Lỗi phản hồi từ máy chủ." };
-
-                if (!response.IsSuccessStatusCode && !result.Success && string.IsNullOrEmpty(result.Message))
-                    result.Message = "Tài khoản hoặc mật khẩu không hợp lệ.";
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ApiService] Lỗi Login: {ex.Message}");
-                return new LoginResponse { Success = false, Message = "Lỗi kết nối đến máy chủ." };
-            }
-        }
-
-        // ============================================================
-        //  ĐĂNG KÝ (API)
-        // ============================================================
-        public async Task<RegisterResponse> RegisterAsync(string fullName, string email, string phone, string password)
-        {
-            if (!IsNetworkAvailable())
-                return new RegisterResponse { Success = false, Message = "Không có kết nối mạng." };
-
-            try
-            {
-                var payload = new
-                {
-                    FullName = fullName,
-                    Email = email,
-                    Phone = phone,
-                    Password = password
-                };
-
-                var response = await _httpClient.PostAsJsonAsync($"{_baseUrl}/AuthApi/register", payload);
-
-                var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var result = await response.Content.ReadFromJsonAsync<RegisterResponse>(jsonOptions);
-
-                if (result == null)
-                    return new RegisterResponse { Success = false, Message = "Lỗi phản hồi từ máy chủ." };
-
-                // 409 Conflict = email đã tồn tại — server đã trả về message rõ ràng
-                if (!response.IsSuccessStatusCode && !result.Success && string.IsNullOrEmpty(result.Message))
-                    result.Message = "Đăng ký không thành công. Vui lòng thử lại.";
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ApiService] Lỗi Register: {ex.Message}");
-                return new RegisterResponse { Success = false, Message = "Lỗi kết nối đến máy chủ." };
-            }
-        }
-    } // <--- CLASS ApiService ĐÓNG LẠI Ở ĐÂY CHỨ KHÔNG PHẢI Ở TRÊN
-
-    // ============================================================
-    //  CÁC CLASS MÔ HÌNH DỮ LIỆU (NẰM NGOÀI APISERVICE)
-    // ============================================================
-    public class LoginResponse
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; }
-        public string Email { get; set; }
-        public string Role { get; set; }
     }
 
-    public class RegisterResponse
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; }
-        public string Email { get; set; }
-        public string Role { get; set; }
-    }
-
+    // ============================================================
+    //  CONVERTER TIỆN ÍCH
+    // ============================================================
     public class IntToStringConverter : System.Text.Json.Serialization.JsonConverter<string>
     {
         public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

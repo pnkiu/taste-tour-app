@@ -19,15 +19,17 @@ namespace TasteTourApp
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
+
             // ── Đăng ký services ──────────────────────────────────────
             builder.Services.AddSingleton<DatabaseService>();
             builder.Services.AddSingleton<GeofenceEngine>();
             builder.Services.AddSingleton<ApiService>();
             builder.Services.AddSingleton<SyncService>();
+            // Frictionless Onboarding: nhận diện thiết bị thay vì tài khoản
+            builder.Services.AddSingleton<DeviceService>();
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<SavedPage>();
-            builder.Services.AddTransient<LoginPage>();
-            builder.Services.AddTransient<RegisterPage>();
+            builder.Services.AddTransient<ProfilePage>();
 
 #if DEBUG
             builder.Logging.AddDebug();
