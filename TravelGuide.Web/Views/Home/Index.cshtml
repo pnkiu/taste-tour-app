@@ -79,3 +79,62 @@
             </div>
         </div>
     </div>
+
+    @section Scripts {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
+        <script>
+            $(document).ready(function () {
+            // 2. Kết nối tới Tổng đài "/deviceHub"
+            const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/deviceHub")
+            .build();
+
+            // 3. Lắng nghe sự kiện "Có máy mới vào"
+            connection.on("OnDeviceConnected", function (connectionId, deviceId, platform, joinTime) {
+            // Tạo một dòng mới với nền xanh nhấp nháy
+            var newRow = `
+            <tr id="${connectionId}" class="bg-success text-white" style="transition: all 1s;">
+            <td>Mới</td>
+            <td><code>${deviceId}</code></td>
+            <td><i class="fas fa-mobile-alt mr-1"></i> ${platform}</td>
+            <td>${joinTime}</td>
+            <td class="font-weight-bold">${joinTime}</td>
+            <td><span class="badge badge-light text-success">Đang Active</span></td>
+            </tr>
+            `;
+                
+            // Nhét lên đầu bảng
+            $("#activeDeviceList").prepend(newRow);
+                
+            // Cập nhật số lượng tổng (nếu có thẻ id="totalDevices")
+            // Sau 2 giây, trả màu nền về bình thường
+            setTimeout(() => {
+            $(`#${connectionId}`).removeClass("bg-success text-white");
+            }, 2000);
+            });
+
+            // 4. Lắng nghe sự kiện "Máy thoát App"
+            connection.on("OnDeviceDisconnected", function (connectionId) {
+            // Đổi màu dòng đó thành xám/đỏ rồi cho bay màu
+            var row = $(`#${connectionId}`);
+            if (row.length) {
+            row.removeClass().addClass("bg-danger text-white");
+            row.find(".badge").removeClass("badge-light text-success").addClass("badge-dark").text("Vừa Offline");
+                    
+            // Sau 3 giây thì xóa hẳn dòng đó đi
+            setTimeout(() => {
+            row.fadeOut("slow", function() { $(this).remove(); });
+            }, 3000);
+            }
+            });
+
+            // 5. Bắt đầu chạy bộ đàm
+            connection.start().then(function () {
+            console.log("Web Admin đã kết nối thành công tới SignalR Hub!");
+            }).catch(function (err) {
+            return console.error(err.toString());
+            });
+            });
+        </script>
+    }
