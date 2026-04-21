@@ -1,140 +1,182 @@
-﻿@{
-    ViewData["Title"] = "TasteTourApp - Dashboard";
+﻿@model dynamic
+@{
+    ViewData["Title"] = "TasteTour - Admin Dashboard";
 }
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Bảng điều khiển hệ thống</h1>
-    <a href="/swagger" target="_blank" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-        <i class="fas fa-code fa-sm text-white-50"></i> Kiểm tra API
-    </a>
-</div>
+<div class="d-flex flex-column" style="min-height: calc(100vh - 170px);">
 
-<div class="row">
-
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng số Địa điểm (POI)</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalPOIs</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-map-marker-alt fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-xs"><a asp-controller="POIs" asp-action="Index">Xem chi tiết &rarr;</a></div>
-            </div>
-        </div>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Bảng điều khiển hệ thống</h1>
+        <a href="/swagger" target="_blank" class="btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-code fa-sm text-white-50"></i> Kiểm tra API
+        </a>
     </div>
 
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">File Thuyết minh (Audio)</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalAudios</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-headphones fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-xs"><a asp-controller="Audios" asp-action="Index">Quản lý file &rarr;</a></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Hành trình (Tours)</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalTours</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-route fa-2x text-gray-300"></i>
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng số Địa điểm (POI)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalPOIs</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-map-marker-alt fa-2x text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
-                <div class="mt-2 text-xs"><a asp-controller="Tours" asp-action="Index">Quản lý hành trình &rarr;</a></div>
             </div>
         </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-lg-12 mb-4">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Giới thiệu dự án Taste Tour App</h6>
-            </div>
-            <div class="card-body">
-                <div class="text-center">
-                    <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 15rem;" src="~/img/undraw_posting_photo.svg" alt="...">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Thiết bị đang dùng App</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalActiveDevices">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-mobile-alt fa-2x text-gray-300"></i>
+                        </div>
                     </div>
-                    <p>Chào mừng đến với hệ thống quản trị <b>Taste Tour</b>. Đây là nền tảng quản lý các điểm đến ẩm thực tại khu phố Vĩnh Khánh. Dữ liệu bạn nhập ở đây sẽ được đồng bộ trực tiếp sang ứng dụng Mobile qua cổng API.</p>
-                    <p class="mb-0">Dự án được phát triển bởi nhóm sinh viên SGU, sử dụng công nghệ .NET 8 MVC và .NET MAUI.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Hành trình (Tours)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalTours</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-route fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    @section Scripts {
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-dark">
+                    <h6 class="m-0 font-weight-bold text-white">
+                        <i class="fas fa-satellite-dish text-success mr-2 blink_me"></i>Giám sát thiết bị trực tuyến (Real-time)
+                    </h6>
+                    <span class="badge badge-success" id="connectionStatus">Đã kết nối Hub</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 350px;">
+                        <table class="table table-hover mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th style="width: 40%">Mã thiết bị</th>
+                                    <th style="width: 20%">Hệ điều hành</th>
+                                    <th style="width: 20%">Giờ vào</th>
+                                    <th style="width: 20%">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activeDeviceList">
+                                <tr id="noDeviceRow">
+                                    <td colspan="4" class="text-center text-muted py-5">
+                                        <i class="fas fa-spinner fa-spin mr-2"></i> Đang chờ kết nối từ ứng dụng Mobile...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <script>
-            $(document).ready(function () {
-            // 2. Kết nối tới Tổng đài "/deviceHub"
+    <div class="row mt-auto">
+        <div class="col-12 mb-2">
+            <div class="card shadow">
+                <div class="card-body text-center py-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <img class="img-fluid px-3" style="max-height: 120px;" src="~/img/undraw_posting_photo.svg" alt="...">
+                        </div>
+                        <div class="col-md-9 text-md-left">
+                            <p class="text-gray-800 mb-1">
+                                Hệ thống quản trị <strong>Taste Tour - Phố ẩm thực Vĩnh Khánh</strong>
+                            </p>
+                            <p class="mb-0 text-muted small">
+                                Sinh viên thực hiện: <strong>Nguyễn Huỳnh Hoàng Vũ</strong> & <strong>Nguyễn Tấn Phát</strong> (ĐH Sài Gòn - SGU)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div> <style>
+    .blink_me { animation: blinker 1.5s linear infinite; }
+    @@keyframes blinker { 50% { opacity: 0; } }
+    #activeDeviceList tr { transition: background-color 1.5s ease; }
+</style>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
             const connection = new signalR.HubConnectionBuilder()
-            .withUrl("/deviceHub")
-            .build();
+                .withUrl("/deviceHub")
+                .build();
 
-            // 3. Lắng nghe sự kiện "Có máy mới vào"
+            // Sự kiện máy vào
             connection.on("OnDeviceConnected", function (connectionId, deviceId, platform, joinTime) {
-            // Tạo một dòng mới với nền xanh nhấp nháy
-            var newRow = `
-            <tr id="${connectionId}" class="bg-success text-white" style="transition: all 1s;">
-            <td>Mới</td>
-            <td><code>${deviceId}</code></td>
-            <td><i class="fas fa-mobile-alt mr-1"></i> ${platform}</td>
-            <td>${joinTime}</td>
-            <td class="font-weight-bold">${joinTime}</td>
-            <td><span class="badge badge-light text-success">Đang Active</span></td>
-            </tr>
-            `;
+                $('#noDeviceRow').remove();
                 
-            // Nhét lên đầu bảng
-            $("#activeDeviceList").prepend(newRow);
-                
-            // Cập nhật số lượng tổng (nếu có thẻ id="totalDevices")
-            // Sau 2 giây, trả màu nền về bình thường
-            setTimeout(() => {
-            $(`#${connectionId}`).removeClass("bg-success text-white");
-            }, 2000);
+                let currentCount = parseInt($('#totalActiveDevices').text()) || 0;
+                $('#totalActiveDevices').text(currentCount + 1).addClass('text-success');
+                setTimeout(() => $('#totalActiveDevices').removeClass('text-success'), 1000);
+
+                var newRow = `
+                    <tr id="${connectionId}" class="bg-success text-white">
+                        <td><strong>${deviceId}</strong></td>
+                        <td><i class="fas fa-mobile-alt mr-2"></i>${platform}</td>
+                        <td>${joinTime}</td>
+                        <td><span class="badge badge-light text-success font-weight-bold">Đang Online</span></td>
+                    </tr>
+                `;
+                $("#activeDeviceList").prepend(newRow);
+                setTimeout(() => $(`#${connectionId}`).removeClass("bg-success text-white"), 2000);
             });
 
-            // 4. Lắng nghe sự kiện "Máy thoát App"
+            // Sự kiện máy thoát
             connection.on("OnDeviceDisconnected", function (connectionId) {
-            // Đổi màu dòng đó thành xám/đỏ rồi cho bay màu
-            var row = $(`#${connectionId}`);
-            if (row.length) {
-            row.removeClass().addClass("bg-danger text-white");
-            row.find(".badge").removeClass("badge-light text-success").addClass("badge-dark").text("Vừa Offline");
+                var row = $(`#${connectionId}`);
+                if (row.length) {
+                    let currentCount = parseInt($('#totalActiveDevices').text()) || 1;
+                    $('#totalActiveDevices').text(Math.max(0, currentCount - 1)).addClass('text-danger');
+                    setTimeout(() => $('#totalActiveDevices').removeClass('text-danger'), 1000);
+
+                    row.addClass("bg-danger text-white");
+                    row.find(".badge").removeClass("badge-light text-success").addClass("badge-dark").text("Đã thoát");
                     
-            // Sau 3 giây thì xóa hẳn dòng đó đi
-            setTimeout(() => {
-            row.fadeOut("slow", function() { $(this).remove(); });
-            }, 3000);
-            }
+                    setTimeout(() => { 
+                        row.fadeOut("slow", function() { $(this).remove(); }); 
+                    }, 3000);
+                }
             });
 
-            // 5. Bắt đầu chạy bộ đàm
             connection.start().then(function () {
-            console.log("Web Admin đã kết nối thành công tới SignalR Hub!");
+                console.log("SignalR Connected!");
+                $("#connectionStatus").text("Hub Ready").removeClass("badge-secondary").addClass("badge-success");
             }).catch(function (err) {
-            return console.error(err.toString());
+                $("#connectionStatus").text("Hub Error").removeClass("badge-success").addClass("badge-danger");
+                return console.error(err.toString());
             });
-            });
-        </script>
-    }
+        });
+    </script>
+}
