@@ -14,7 +14,7 @@ namespace TravelGuide.Web.Models
         [Display(Name = "Mô tả chi tiết")]
         public string? Description { get; set; }
 
-        // --- Dữ liệu phục vụ Geofencing (Slide 1) ---
+        // --- Dữ liệu phục vụ Geofencing ---
         [Required]
         [Display(Name = "Vĩ độ (Lat)")]
         public double Latitude { get; set; }
@@ -24,12 +24,12 @@ namespace TravelGuide.Web.Models
         public double Longitude { get; set; }
 
         [Display(Name = "Bán kính kích hoạt (m)")]
-        public double Radius { get; set; } = 50; // Mặc định 50m
+        public double Radius { get; set; } = 50;
 
         [Display(Name = "Mức ưu tiên")]
         public int Priority { get; set; } = 1;
 
-        // --- Dữ liệu đa phương tiện (Slide 1 & nội dung) ---
+        // --- Dữ liệu đa phương tiện ---
         [Display(Name = "Ảnh minh họa (Link)")]
         public string? ImageUrl { get; set; }
 
@@ -46,8 +46,12 @@ namespace TravelGuide.Web.Models
         [Display(Name = "Link bản đồ")]
         public string? MapLink { get; set; }
 
+        // --- MỚI: Thẻ phân loại (Tags) ---
+        [Display(Name = "Thẻ phân loại (Tags)")]
+        [StringLength(500)]
+        public string? Tags { get; set; }
+
         // Mối quan hệ: 1 POI có thể nằm trong nhiều Hành trình (Tour)
-        // ĐÃ ĐƯỢC ĐƯA VÀO ĐÚNG BÊN TRONG CLASS POI
-        public virtual ICollection<TourPOI>? TourPOIs { get; set; }
+        public virtual ICollection<TourPOI> TourPOIs { get; set; } = new List<TourPOI>();
     }
 }
