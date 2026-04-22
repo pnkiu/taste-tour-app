@@ -28,7 +28,6 @@ Chỉ bật file mp3 của cái quán Priority cao nhất đó thôi, mấy quá
 
 Gửi cho Phát đoạn code này để ổng lấy GPS và bắn lên Web cho bạn:
 
-// Trong App Mobile .NET MAUI
 var location = await Geolocation.Default.GetLocationAsync();
 if (location != null) {
     // Gửi 4 tham số: ID máy, Hệ điều hành, Vĩ độ, Kinh độ
