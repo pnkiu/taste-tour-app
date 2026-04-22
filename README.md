@@ -24,3 +24,13 @@ Lọc và Phát Audio: * Lọc ra những POI nào mà Khoảng cách <= Bán k�
 Nếu có nhiều hơn 2 quán thỏa mãn, mày dùng LINQ OrderByDescending(x => x.Priority).First() để lấy ra cái quán có Priority cao nhất.
 
 Chỉ bật file mp3 của cái quán Priority cao nhất đó thôi, mấy quán kia tắt hết.
+
+
+Gửi cho Phát đoạn code này để ổng lấy GPS và bắn lên Web cho bạn:
+
+// Trong App Mobile .NET MAUI
+var location = await Geolocation.Default.GetLocationAsync();
+if (location != null) {
+    // Gửi 4 tham số: ID máy, Hệ điều hành, Vĩ độ, Kinh độ
+    await hubConnection.SendAsync("DeviceJoined", "iPhone_Cua_Phat", "iOS", location.Latitude, location.Longitude);
+}
