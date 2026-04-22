@@ -3,6 +3,8 @@
     ViewData["Title"] = "TasteTour - Admin Dashboard";
 }
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
 <div class="d-flex flex-column" style="min-height: calc(100vh - 170px);">
 
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -62,29 +64,29 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-dark">
-                    <h6 class="m-0 font-weight-bold text-white">
-                        <i class="fas fa-satellite-dish text-success mr-2 blink_me"></i>Giám sát thiết bị trực tuyến (Real-time)
-                    </h6>
-                    <span class="badge badge-success" id="connectionStatus">Đã kết nối Hub</span>
+    <div class="row mb-4">
+        
+        <div class="col-lg-8 mb-4 mb-lg-0">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-users mr-2"></i>Danh sách thiết bị trực tuyến</h6>
+                    <span class="badge badge-success" id="connectionStatus">Đang kết nối Hub...</span>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 350px;">
+                    <div class="table-responsive" style="height: 500px; overflow-y: auto;">
                         <table class="table table-hover mb-0">
-                            <thead class="thead-light">
+                            <thead class="thead-light" style="position: sticky; top: 0; z-index: 1;">
                                 <tr>
-                                    <th style="width: 40%">Mã thiết bị</th>
-                                    <th style="width: 20%">Hệ điều hành</th>
-                                    <th style="width: 20%">Giờ vào</th>
+                                    <th style="width: 25%">Mã thiết bị</th>
+                                    <th style="width: 15%">HĐH</th>
+                                    <th style="width: 25%">Vị trí (GPS)</th>
+                                    <th style="width: 15%">Giờ vào</th>
                                     <th style="width: 20%">Trạng thái</th>
                                 </tr>
                             </thead>
                             <tbody id="activeDeviceList">
                                 <tr id="noDeviceRow">
-                                    <td colspan="4" class="text-center text-muted py-5">
+                                    <td colspan="5" class="text-center text-muted py-5 mt-5">
                                         <i class="fas fa-spinner fa-spin mr-2"></i> Đang chờ kết nối từ ứng dụng Mobile...
                                     </td>
                                 </tr>
@@ -94,6 +96,20 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow border-bottom-danger h-100">
+                <div class="card-header py-3 bg-dark d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-white text-truncate">
+                        <i class="fas fa-map-marked-alt text-warning mr-2"></i>Bản đồ Heatmap
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map" style="height: 500px; width: 100%; border-bottom-left-radius: 0.35rem; border-bottom-right-radius: 0.35rem;"></div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div class="row mt-auto">
@@ -117,34 +133,64 @@
             </div>
         </div>
     </div>
+</div> 
 
-</div> <style>
+<style>
     .blink_me { animation: blinker 1.5s linear infinite; }
     @@keyframes blinker { 50% { opacity: 0; } }
     #activeDeviceList tr { transition: background-color 1.5s ease; }
 </style>
 
 @section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 
     <script>
         $(document).ready(function () {
+            // 1. CẤU HÌNH BẢN ĐỒ VĨNH KHÁNH
+            var map = L.map('map').setView([10.7600, 106.7050], 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            var heatPoints = [];
+            var heatLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 17 }).addTo(map);
+            var deviceMarkers = {};
+
+            // 2. CẤU HÌNH SIGNALR
             const connection = new signalR.HubConnectionBuilder()
                 .withUrl("/deviceHub")
                 .build();
 
-            // Sự kiện máy vào
-            connection.on("OnDeviceConnected", function (connectionId, deviceId, platform, joinTime) {
+            // SỰ KIỆN MÁY VÀO (Nhận thêm lat, lng từ Backend)
+            connection.on("OnDeviceConnected", function (connectionId, deviceId, platform, joinTime, lat, lng) {
                 $('#noDeviceRow').remove();
                 
                 let currentCount = parseInt($('#totalActiveDevices').text()) || 0;
                 $('#totalActiveDevices').text(currentCount + 1).addClass('text-success');
                 setTimeout(() => $('#totalActiveDevices').removeClass('text-success'), 1000);
 
+                var latLngText = "Đang lấy...";
+
+                // Nếu có gửi tọa độ lên thì vẽ lên bản đồ
+                if (lat && lng) {
+                    latLngText = lat.toFixed(5) + ", " + lng.toFixed(5);
+                    
+                    // Thêm đốm nhiệt
+                    heatPoints.push([lat, lng, 0.7]);
+                    heatLayer.setLatLngs(heatPoints);
+
+                    // Thêm Marker chấm xanh
+                    if (deviceMarkers[connectionId]) map.removeLayer(deviceMarkers[connectionId]);
+                    deviceMarkers[connectionId] = L.circleMarker([lat, lng], { radius: 6, color: 'blue', fillColor: '#3388ff', fillOpacity: 1 }).addTo(map)
+                        .bindPopup("Thiết bị: " + deviceId);
+                }
+
+                // Cập nhật dòng trong bảng
                 var newRow = `
                     <tr id="${connectionId}" class="bg-success text-white">
-                        <td><strong>${deviceId}</strong></td>
+                        <td class="text-truncate" style="max-width: 150px;" title="${deviceId}"><strong>${deviceId}</strong></td>
                         <td><i class="fas fa-mobile-alt mr-2"></i>${platform}</td>
+                        <td><code>${latLngText}</code></td>
                         <td>${joinTime}</td>
                         <td><span class="badge badge-light text-success font-weight-bold">Đang Online</span></td>
                     </tr>
@@ -153,8 +199,14 @@
                 setTimeout(() => $(`#${connectionId}`).removeClass("bg-success text-white"), 2000);
             });
 
-            // Sự kiện máy thoát
+            // SỰ KIỆN MÁY THOÁT
             connection.on("OnDeviceDisconnected", function (connectionId) {
+                // Xóa marker trên bản đồ
+                if (deviceMarkers[connectionId]) {
+                    map.removeLayer(deviceMarkers[connectionId]);
+                    delete deviceMarkers[connectionId];
+                }
+
                 var row = $(`#${connectionId}`);
                 if (row.length) {
                     let currentCount = parseInt($('#totalActiveDevices').text()) || 1;
@@ -172,11 +224,14 @@
 
             connection.start().then(function () {
                 console.log("SignalR Connected!");
-                $("#connectionStatus").text("Hub Ready").removeClass("badge-secondary").addClass("badge-success");
+                $("#connectionStatus").text("Hub & Map Ready").removeClass("badge-success").addClass("badge-primary");
             }).catch(function (err) {
-                $("#connectionStatus").text("Hub Error").removeClass("badge-success").addClass("badge-danger");
+                $("#connectionStatus").text("Lỗi kết nối").removeClass("badge-success").addClass("badge-danger");
                 return console.error(err.toString());
             });
+
+            // Sửa lỗi bản đồ bị co rút khi nằm trong lưới nhỏ
+            setTimeout(function(){ map.invalidateSize()}, 400);
         });
     </script>
 }

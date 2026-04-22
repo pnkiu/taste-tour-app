@@ -8,13 +8,14 @@ namespace TravelGuide.Web.Hubs
     public class DeviceHub : Hub
     {
         // 1. Hàm này dành cho Mobile (Phát) gọi lên khi vừa mở App
-        public async Task DeviceJoined(string deviceId, string platform)
+        // Đã thêm lat và lng để phục vụ vẽ Heatmap
+        public async Task DeviceJoined(string deviceId, string platform, double lat, double lng)
         {
             var joinTime = DateTime.Now.ToString("HH:mm:ss");
             var connectionId = Context.ConnectionId; // Mã kết nối ẩn của SignalR
 
-            // Phát loa thông báo cho tất cả màn hình Web Admin: "Có máy mới vào!"
-            await Clients.All.SendAsync("OnDeviceConnected", connectionId, deviceId, platform, joinTime);
+            // Phát loa thông báo kèm tọa độ cho màn hình Web Admin
+            await Clients.All.SendAsync("OnDeviceConnected", connectionId, deviceId, platform, joinTime, lat, lng);
         }
 
         // 2. Hàm này tự động chạy khi Mobile bị tắt mạng hoặc đóng App
@@ -22,7 +23,7 @@ namespace TravelGuide.Web.Hubs
         {
             var connectionId = Context.ConnectionId;
 
-            // Phát loa thông báo: "Cái máy có mã connectionId này vừa out rồi!"
+            // Phát loa thông báo: "Thiết bị vừa ngắt kết nối!"
             await Clients.All.SendAsync("OnDeviceDisconnected", connectionId);
 
             await base.OnDisconnectedAsync(exception);
