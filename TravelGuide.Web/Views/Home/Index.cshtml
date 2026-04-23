@@ -1,4 +1,4 @@
-﻿@model dynamic
+@model dynamic
 @{
     ViewData["Title"] = "TasteTour - Admin Dashboard";
 }
@@ -156,51 +156,63 @@
             var heatLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 17 }).addTo(map);
             var deviceMarkers = {};
 
+            // Track connectionId đã biết để tránh cộng đôi khi server gửi lại danh sách cũ
+            var knownConnections = new Set();
+
+            function updateDeviceCount() {
+                $('#totalActiveDevices').text(knownConnections.size);
+            }
+
             // 2. CẤU HÌNH SIGNALR
             const connection = new signalR.HubConnectionBuilder()
                 .withUrl("/deviceHub")
                 .build();
 
-            // SỰ KIỆN MÁY VÀO (Nhận thêm lat, lng từ Backend)
+            // SỰ KIỆN MÁY VÀO (cũng dùng khi server replay danh sách cũ cho admin mới kết nối)
             connection.on("OnDeviceConnected", function (connectionId, deviceId, platform, joinTime, lat, lng) {
+                // Nếu thiết bị này đã có trong bảng rồi (replay từ server) → bỏ qua
+                if (knownConnections.has(connectionId)) return;
+                knownConnections.add(connectionId);
+
                 $('#noDeviceRow').remove();
-                
-                let currentCount = parseInt($('#totalActiveDevices').text()) || 0;
-                $('#totalActiveDevices').text(currentCount + 1).addClass('text-success');
+                updateDeviceCount();
+                $('#totalActiveDevices').addClass('text-success');
                 setTimeout(() => $('#totalActiveDevices').removeClass('text-success'), 1000);
 
                 var latLngText = "Đang lấy...";
 
-                // Nếu có gửi tọa độ lên thì vẽ lên bản đồ
+                // Nếu có tọa độ thì vẽ lên bản đồ
                 if (lat && lng) {
                     latLngText = lat.toFixed(5) + ", " + lng.toFixed(5);
-                    
-                    // Thêm đốm nhiệt
                     heatPoints.push([lat, lng, 0.7]);
                     heatLayer.setLatLngs(heatPoints);
-
-                    // Thêm Marker chấm xanh
                     if (deviceMarkers[connectionId]) map.removeLayer(deviceMarkers[connectionId]);
                     deviceMarkers[connectionId] = L.circleMarker([lat, lng], { radius: 6, color: 'blue', fillColor: '#3388ff', fillOpacity: 1 }).addTo(map)
                         .bindPopup("Thiết bị: " + deviceId);
                 }
 
-                // Cập nhật dòng trong bảng
+                // Thêm dòng vào bảng (dùng CSS transition nhẹ thay vì flash mạnh)
+                var isReplay = (joinTime !== "");
+                var rowClass = isReplay ? "" : "bg-success text-white";
                 var newRow = `
-                    <tr id="${connectionId}" class="bg-success text-white">
+                    <tr id="${connectionId}" class="${rowClass}">
                         <td class="text-truncate" style="max-width: 150px;" title="${deviceId}"><strong>${deviceId}</strong></td>
                         <td><i class="fas fa-mobile-alt mr-2"></i>${platform}</td>
                         <td><code>${latLngText}</code></td>
                         <td>${joinTime}</td>
-                        <td><span class="badge badge-light text-success font-weight-bold">Đang Online</span></td>
+                        <td><span class="badge badge-light text-success font-weight-bold"><i class="fas fa-circle fa-xs mr-1"></i>Online</span></td>
                     </tr>
                 `;
                 $("#activeDeviceList").prepend(newRow);
-                setTimeout(() => $(`#${connectionId}`).removeClass("bg-success text-white"), 2000);
+                if (rowClass) {
+                    setTimeout(() => $(`#${connectionId}`).removeClass("bg-success text-white"), 2000);
+                }
             });
 
             // SỰ KIỆN MÁY THOÁT
             connection.on("OnDeviceDisconnected", function (connectionId) {
+                knownConnections.delete(connectionId);
+
                 // Xóa marker trên bản đồ
                 if (deviceMarkers[connectionId]) {
                     map.removeLayer(deviceMarkers[connectionId]);
@@ -209,15 +221,19 @@
 
                 var row = $(`#${connectionId}`);
                 if (row.length) {
-                    let currentCount = parseInt($('#totalActiveDevices').text()) || 1;
-                    $('#totalActiveDevices').text(Math.max(0, currentCount - 1)).addClass('text-danger');
+                    updateDeviceCount();
+                    $('#totalActiveDevices').addClass('text-danger');
                     setTimeout(() => $('#totalActiveDevices').removeClass('text-danger'), 1000);
 
                     row.addClass("bg-danger text-white");
                     row.find(".badge").removeClass("badge-light text-success").addClass("badge-dark").text("Đã thoát");
-                    
-                    setTimeout(() => { 
-                        row.fadeOut("slow", function() { $(this).remove(); }); 
+                    setTimeout(() => {
+                        row.fadeOut("slow", function() {
+                            $(this).remove();
+                            if ($('#activeDeviceList tr').length === 0) {
+                                $('#activeDeviceList').html('<tr id="noDeviceRow"><td colspan="5" class="text-center text-muted py-5"><i class="fas fa-spinner fa-spin mr-2"></i> Đang chờ kết nối từ ứng dụng Mobile...</td></tr>');
+                            }
+                        });
                     }, 3000);
                 }
             });

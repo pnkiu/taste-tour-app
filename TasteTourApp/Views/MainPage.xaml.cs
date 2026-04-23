@@ -2,6 +2,8 @@ using Microsoft.Extensions.DependencyInjection;
 using TasteTourApp.Models;
 using TasteTourApp.Services;
 using TasteTourApp.Services.Geofence;
+using Microsoft.AspNetCore.SignalR.Client;
+
 #if ANDROID
 using Android.Media;
 #endif
@@ -17,6 +19,7 @@ namespace TasteTourApp.Views
         private QuanAn? _quanDangChon = null;
         private bool _sheetDangMo = false;
         private bool _isMapReady = false;
+        private HubConnection _hubConnection;
 
         // TTS (Text-to-Speech)
         private CancellationTokenSource? _ttsCts = null;
@@ -250,14 +253,17 @@ namespace TasteTourApp.Views
         _dbService = dbService;
         _geofenceEngine = geofenceEngine;
         _syncService = syncService;
+            _hubConnection = new HubConnectionBuilder().WithUrl("http://192.168.1.207:5220/deviceHub") // Hỏi Vũ cái đuôi URL của Hub là gì
+                .Build();
 
-        // FIX: Ẩn sheet ngay khi khởi tạo bằng cách đẩy xuống ngoài màn hình
-        TheChiTiet.SizeChanged += OnSheetSizeChanged;
+            // FIX: Ẩn sheet ngay khi khởi tạo bằng cách đẩy xuống ngoài màn hình
+            TheChiTiet.SizeChanged += OnSheetSizeChanged;
 
         // Set bottom sheet ở peek height ban đầu
         BottomSheetDanhSach.HeightRequest = _sheetMinHeight;
         BanDoWebView.Navigated += BanDoWebView_Navigated;
-    }
+
+        }
         // ============================================================
         //  SỰ KIỆN WEBVIEW TẢI XONG HTML
         // ============================================================
@@ -293,24 +299,22 @@ namespace TasteTourApp.Views
         /// Tự động phát TTS khi người dùng VÀO vùng POI (Enter), chỉ notify khi Nearby
         private async void OnPoiTriggered(object? sender, GeofenceTrigger trigger)
     {
-        System.Diagnostics.Debug.WriteLine(
-            $"[Geofence] {trigger.Type}: {trigger.Quan.TenQuan} ({trigger.DistanceMeters:F0}m)");
+            System.Diagnostics.Debug.WriteLine($"[Geofence] {trigger.Type}: {trigger.Quan.TenQuan}");
 
-        if (trigger.Type == GeofenceTriggerType.Nearby)
-        {
-            // Chỉ hiển thị thông báo nhẹ, không phát TTS
-            System.Diagnostics.Debug.WriteLine(
-                $"[Geofence] Nearby — không phát TTS cho {trigger.Quan.TenQuan}");
-            return;
+            if (trigger.Type == GeofenceTriggerType.Nearby) return;
+            if (_sheetDangMo) return;
+
+            // 👇 BỎ dòng if (_dangPhatTTS) return; đi, thay bằng đoạn này:
+            if (_dangPhatTTS)
+            {
+                // Nếu phát hiện quán mới xịn hơn/hoặc đang trùng lặp, ta TẮT thằng cũ đi
+                await StopTts();
+                System.Diagnostics.Debug.WriteLine($"[Audio] Đã tắt âm thanh cũ để nhường chỗ cho: {trigger.Quan.TenQuan}");
+            }
+
+            _quanDangChon = trigger.Quan;
+            await PhatTts();
         }
-
-        // Enter: kích hoạt TTS nếu sheet đang đóng và chưa có TTS đang phát
-        if (_sheetDangMo) return;
-        if (_dangPhatTTS) return;
-
-        _quanDangChon = trigger.Quan;
-        await PhatTts();
-    }
 
     /// Cập nhật highlight POI gần nhất trên bản đồ
     private async void OnNearestPoiChanged(object? sender, (string poiId, double distanceMeters) e)
@@ -361,7 +365,19 @@ namespace TasteTourApp.Views
 
         // Đồng bộ từ API sau (không chặn UI)
         _ = _syncService.SyncAsync();
-    }
+            try
+            {
+                if (_hubConnection.State == HubConnectionState.Disconnected)
+                {
+                    await _hubConnection.StartAsync();
+                    System.Diagnostics.Debug.WriteLine("[SignalR] Kết nối Hub thành công!");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SignalR] Lỗi kết nối: {ex.Message}");
+            }
+        }
 
     // ============================================================
     //  ÁP DỤNG NGÔN NGỮ GIAO DIỆN
@@ -416,31 +432,53 @@ namespace TasteTourApp.Views
 
         // Vẫn giữ HighlightNearestPoi để UI update ngay lập tức (không chờ debounce)
         await HighlightNearestPoi();
+            try
+            {
+                if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
+                {
+                    // Lấy device ID thật: GUID được tạo 1 lần và lưu vào Preferences
+                    var deviceId = Preferences.Get("device_id", null);
+                    if (string.IsNullOrEmpty(deviceId))
+                    {
+                        deviceId = Guid.NewGuid().ToString("N")[..8].ToUpper(); // 8 ký tự đầu cho gọn
+                        Preferences.Set("device_id", deviceId);
+                    }
+                    var deviceLabel = $"{DeviceInfo.Current.Name} [{deviceId}]";
+                    var platform = DeviceInfo.Current.Platform.ToString();
 
-        // ── BỎ COMMENT ĐOẠN DƯỚI ĐỂ DÙNG GPS THẬT ──
-        // try
-        // {
-        //     var location = await Geolocation.GetLocationAsync(new GeolocationRequest
-        //     {
-        //         DesiredAccuracy = GeolocationAccuracy.High,
-        //         Timeout = TimeSpan.FromSeconds(10)
-        //     });
-        //     if (location != null)
-        //     {
-        //         _userLat = location.Latitude;
-        //         _userLng = location.Longitude;
-        //         _hasUserLocation = true;
-        //         var lat = _userLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        //         var lng = _userLng.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        //         await BanDoWebView.EvaluateJavaScriptAsync($"setUserLocation({lat}, {lng})");
-        //         await HighlightNearestPoi();
-        //     }
-        // }
-        // catch (Exception ex)
-        // {
-        //     System.Diagnostics.Debug.WriteLine($"Lỗi GPS: {ex.Message}");
-        // }
-    }
+                    await _hubConnection.SendAsync("DeviceJoined", deviceLabel, platform, _userLat, _userLng);
+                    System.Diagnostics.Debug.WriteLine($"[SignalR] Đã đăng ký thiết bị: {deviceLabel}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SignalR] Lỗi gửi tọa độ: {ex.Message}");
+            }
+
+            // ── BỎ COMMENT ĐOẠN DƯỚI ĐỂ DÙNG GPS THẬT ──
+            // try
+            // {
+            //     var location = await Geolocation.GetLocationAsync(new GeolocationRequest
+            //     {
+            //         DesiredAccuracy = GeolocationAccuracy.High,
+            //         Timeout = TimeSpan.FromSeconds(10)
+            //     });
+            //     if (location != null)
+            //     {
+            //         _userLat = location.Latitude;
+            //         _userLng = location.Longitude;
+            //         _hasUserLocation = true;
+            //         var lat = _userLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            //         var lng = _userLng.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            //         await BanDoWebView.EvaluateJavaScriptAsync($"setUserLocation({lat}, {lng})");
+            //         await HighlightNearestPoi();
+            //     }
+            // }
+            // catch (Exception ex)
+            // {
+            //     System.Diagnostics.Debug.WriteLine($"Lỗi GPS: {ex.Message}");
+            // }
+        }
 
     // ============================================================
     //  TÌM & HIGHLIGHT POI GẦN NHẤT
@@ -704,7 +742,7 @@ namespace TasteTourApp.Views
             // hoặc URL đầy đủ — cần build URL đầy đủ để MAUI load được
             string imageUrl = quan.HinhAnh.StartsWith("http", StringComparison.OrdinalIgnoreCase)
                 ? quan.HinhAnh
-                : $"http://192.168.31.240:5220{quan.HinhAnh}";
+                : $"http://192.168.1.207:5220{quan.HinhAnh}";
 
             ImgQuan.Source = ImageSource.FromUri(new Uri(imageUrl));
             ImgQuan.IsVisible = true;
@@ -933,7 +971,7 @@ namespace TasteTourApp.Views
         /// </summary>
         private async Task PhatFileAudio(string audioPath)
         {
-            string baseUrl = "http://192.168.1.109:5220";
+            string baseUrl = "http://192.168.1.207:5220";
 
             // 1. DỌN DẸP LINK: Cắt bỏ khoảng trắng thừa, thay khoảng trắng giữa chữ thành %20
             string cleanPath = audioPath.Trim().Replace(" ", "%20");

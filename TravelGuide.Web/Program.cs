@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using TravelGuide.Web.Data; // Đổi TravelGuide.Web thành tên Project của bạn nếu khác
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +36,18 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "uploads");
+// Nếu chưa có thư mục uploads thì tự động tạo cho an toàn
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads" // Ánh xạ link web (VD: /uploads/audios/...) vào đúng thư mục vật lý
+});
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")

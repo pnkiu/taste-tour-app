@@ -64,7 +64,7 @@ namespace TravelGuide.Web.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Latitude,Longitude,Radius,Priority,ImageUrl,AudioContent,MapLink,Tags")] POI pOI)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description,DescriptionEn,Latitude,Longitude,Radius,Priority,ImageUrl,AudioContent,AudioContentEn,MapLink,Tags")] POI pOI)
         {
             if (ModelState.IsValid)
             {
@@ -95,7 +95,7 @@ namespace TravelGuide.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id,
-    [Bind("Id,Name,Description,Latitude,Longitude,Radius,Priority,ImageUrl,AudioContent,AudioContentEn,MapLink,Tags")] POI pOI,
+    [Bind("Id,Name,Description,DescriptionEn,Latitude,Longitude,Radius,Priority,ImageUrl,AudioContent,AudioContentEn,MapLink,Tags")] POI pOI,
             IFormFile? imageFile,
             IFormFile? audioFile,
             IFormFile? audioFileEn) // <-- Thêm tham số nhận file tiếng Anh

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 using SQLite;
 
 namespace TasteTourApp.Models
@@ -35,10 +36,13 @@ namespace TasteTourApp.Models
         [JsonPropertyName("audioContentEn")]
         public string AudioContentEn { get; set; }
         public string LoaiQuan { get; set; }      // "Oc" / "HaiSan" / "Sushi"
+
         [JsonPropertyName("radius")]
+        [JsonProperty("radius")]
         public double BanKinhMet { get; set; } = 50;  // Geofence radius (mét)
 
         [JsonPropertyName("priority")]
+        [JsonProperty("priority")]
         public int MucUuTien { get; set; } = 1;       // Số càng lớn càng được ưu tiên
         public int ThuTuHienThi { get; set; }         // Thứ tự trong danh sách
         public bool IsSaved { get; set; } = false;    // Trạng thái yêu thích
