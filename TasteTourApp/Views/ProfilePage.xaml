@@ -86,7 +86,7 @@
                             <Border Grid.Column="0" BackgroundColor="#4Db7e7d2" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" Margin="0,0,16,0">
                                 <Label Text="✏️" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
-                            <Label Grid.Column="1" Text="Chỉnh sửa hồ sơ" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
+                            <Label x:Name="LblEditProfile" Grid.Column="1" Text="Chỉnh sửa hồ sơ" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
                             <Label Grid.Column="2" Text="❯" FontSize="14" TextColor="#abadae" VerticalOptions="Center" />
                         </Grid>
                     </Border>
@@ -122,13 +122,30 @@
                             <Border Grid.Column="0" BackgroundColor="#4Db7e7d2" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" Margin="0,0,16,0">
                                 <Label Text="⚙️" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
-                            <Label Grid.Column="1" Text="Cài đặt" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
+                            <Label x:Name="LblSettings" Grid.Column="1" Text="Cài đặt" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
                             <Label x:Name="CaiDatArrow" Grid.Column="2" Text="❯" FontSize="14" TextColor="#abadae" VerticalOptions="Center" />
                         </Grid>
                     </Border>
 
                     <!-- Sub-menu Cài đặt -->
                     <VerticalStackLayout x:Name="CaiDatSubMenu" IsVisible="False" Spacing="8" Margin="20,4,0,0">
+
+                        <!-- Ngôn ngữ ứng dụng -->
+                        <Border BackgroundColor="#ffffff" StrokeThickness="1" Stroke="#E8E8E8" StrokeShape="RoundRectangle 14" Padding="16">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="AppLanguage_Tapped" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                                <Border Grid.Column="0" BackgroundColor="#4D2D6A4F" StrokeThickness="0" StrokeShape="RoundRectangle 16" WidthRequest="36" HeightRequest="36" Margin="0,0,12,0">
+                                    <Label Text="🌐" FontSize="14" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                    <Label x:Name="LblAppLangTitle" Text="Ngôn ngữ ứng dụng" FontSize="13" FontAttributes="Bold" TextColor="#2c2f30" />
+                                    <Label x:Name="LblAppLangSub" Text="Tiếng Việt" FontSize="11" TextColor="#8a8d8e" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="2" Text="❯" FontSize="12" TextColor="#abadae" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
 
                         <!-- Chọn giọng đọc TTS -->
                         <Border BackgroundColor="#ffffff" StrokeThickness="1" Stroke="#E8E8E8" StrokeShape="RoundRectangle 14" Padding="16">
@@ -189,7 +206,7 @@
                             <Border Grid.Column="0" BackgroundColor="#4Db7e7d2" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" Margin="0,0,16,0">
                                 <Label Text="❓" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
-                            <Label Grid.Column="1" Text="Trung tâm trợ giúp" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
+                            <Label x:Name="LblHelpCenter" Grid.Column="1" Text="Trung tâm trợ giúp" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
                             <Label Grid.Column="2" Text="❯" FontSize="14" TextColor="#abadae" VerticalOptions="Center" />
                         </Grid>
                     </Border>
@@ -201,12 +218,12 @@
                         <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.05" />
                     </Border.Shadow>
                     <VerticalStackLayout Spacing="12">
-                        <!-- Header -->
+                        <!-- Thông tin thiết bị -->
                         <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
                             <Border BackgroundColor="#4Db7e7d2" StrokeThickness="0" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40">
                                 <Label Text="📱" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
                             </Border>
-                            <Label Text="Thông tin thiết bị" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
+                            <Label x:Name="LblDeviceInfoTitle" Text="Thông tin thiết bị" FontSize="14" FontAttributes="Bold" TextColor="#2c2f30" VerticalOptions="Center" />
                         </HorizontalStackLayout>
                         <!-- Divider -->
                         <BoxView HeightRequest="1" BackgroundColor="#f0f0f0" />
@@ -220,14 +237,14 @@
                                 <Label Text="Đã xác thực ✓" FontSize="10" TextColor="#376454" FontAttributes="Bold" />
                             </Border>
                         </Grid>
-                        <!-- Device Name row -->
+                        <!-- Trạng thái -->
                         <Grid ColumnDefinitions="*,*">
                             <VerticalStackLayout Grid.Column="0" Spacing="2">
                                 <Label Text="Model" FontSize="11" TextColor="#8a8d8e" />
                                 <Label x:Name="LblDeviceName" Text="..." FontSize="13" FontAttributes="Bold" TextColor="#2c2f30" />
                             </VerticalStackLayout>
                             <VerticalStackLayout Grid.Column="1" Spacing="2">
-                                <Label Text="Trạng thái" FontSize="11" TextColor="#8a8d8e" />
+                                <Label x:Name="LblStatusTitle" Text="Trạng thái" FontSize="11" TextColor="#8a8d8e" />
                                 <Label x:Name="LblFirstUsed" Text="Sử dụng từ ..." FontSize="12" TextColor="#595c5d" />
                             </VerticalStackLayout>
                         </Grid>

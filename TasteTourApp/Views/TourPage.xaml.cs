@@ -18,6 +18,28 @@ public partial class TourPage : ContentPage
         _syncService = syncService;
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        ApplyLanguage();
+    }
+
+    // ============================================================
+    //  ÁP DỤNG NGÔN NGỮ GIAO DIỆN
+    // ============================================================
+    private void ApplyLanguage()
+    {
+        LblHeroBadge.Text    = AppLanguage.T("✨  KHÁM PHÁ NGAY", "✨  EXPLORE NOW");
+        LblHeroTitle.Text    = AppLanguage.T(
+            "Khám phá hương vị\ndi sản qua từng\ncâu chuyện",
+            "Discover flavours\nof heritage through\nevery story");
+        LblCtaButton.Text    = AppLanguage.T("Bắt đầu hành trình", "Start Your Journey");
+        LblFeaturedTitle.Text = AppLanguage.T("Tour Nổi Bật", "Featured Tours");
+        LblFeaturedSub.Text  = AppLanguage.T("Được đề xuất dành riêng cho bạn", "Curated just for you");
+        LblViewAll.Text      = AppLanguage.T("Xem tất cả", "View all");
+        LblRouteTitle.Text   = AppLanguage.T("Khám Phá Theo Tuyến", "Explore By Route");
+    }
+
     // ============================================================
     //  CTA: BẮT ĐẦU HÀNH TRÌNH
     // ============================================================

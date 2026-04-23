@@ -21,12 +21,12 @@
                         <!-- Badge -->
                         <Border BackgroundColor="#336942bd" StrokeThickness="0" StrokeShape="RoundRectangle 16"
                                 Padding="12,5" HorizontalOptions="Start">
-                            <Label Text="✨  KHÁM PHÁ NGAY" TextColor="#f8f0ff" FontSize="9"
+                            <Label x:Name="LblHeroBadge" Text="✨  KHÁM PHÁ NGAY" TextColor="#f8f0ff" FontSize="9"
                                    FontAttributes="Bold" CharacterSpacing="1.5" />
                         </Border>
 
                         <!-- Title -->
-                        <Label Text="Khám phá hương vị&#x0a;di sản qua từng&#x0a;câu chuyện"
+                        <Label x:Name="LblHeroTitle" Text="Khám phá hương vị&#x0a;di sản qua từng&#x0a;câu chuyện"
                                FontSize="30" FontAttributes="Bold" TextColor="White"
                                LineHeight="1.1" />
 
@@ -38,7 +38,7 @@
                             </Border.Shadow>
                             <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                                 <Label Text="🧭" FontSize="16" VerticalOptions="Center" />
-                                <Label Text="Bắt đầu hành trình" TextColor="White" FontSize="14"
+                                <Label x:Name="LblCtaButton" Text="Bắt đầu hành trình" TextColor="White" FontSize="14"
                                        FontAttributes="Bold" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                             <Border.GestureRecognizers>
@@ -64,11 +64,11 @@
                     <!-- Section header -->
                     <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,20">
                         <VerticalStackLayout>
-                            <Label Text="Tour Nổi Bật" FontSize="22" FontAttributes="Bold" TextColor="#2b5848" />
-                            <Label Text="Được đề xuất dành riêng cho bạn" FontSize="12" TextColor="#595c5d" Margin="0,2,0,0" />
+                            <Label x:Name="LblFeaturedTitle" Text="Tour Nổi Bật" FontSize="22" FontAttributes="Bold" TextColor="#2b5848" />
+                            <Label x:Name="LblFeaturedSub" Text="Được đề xuất dành riêng cho bạn" FontSize="12" TextColor="#595c5d" Margin="0,2,0,0" />
                         </VerticalStackLayout>
                         <HorizontalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                            <Label Text="Xem tất cả" FontSize="12" FontAttributes="Bold" TextColor="#376454" VerticalOptions="Center" />
+                            <Label x:Name="LblViewAll" Text="Xem tất cả" FontSize="12" FontAttributes="Bold" TextColor="#376454" VerticalOptions="Center" />
                             <Label Text="❯" FontSize="10" TextColor="#376454" VerticalOptions="Center" />
                         </HorizontalStackLayout>
                     </Grid>
@@ -200,7 +200,7 @@
 
                 <!-- ===== KHÁM PHÁ THEO TUYẾN ===== -->
                 <VerticalStackLayout Padding="24,36,24,0" Spacing="12">
-                    <Label Text="Khám Phá Theo Tuyến" FontSize="22" FontAttributes="Bold" TextColor="#2b5848" Margin="0,0,0,4" />
+                    <Label x:Name="LblRouteTitle" Text="Khám Phá Theo Tuyến" FontSize="22" FontAttributes="Bold" TextColor="#2b5848" Margin="0,0,0,4" />
 
                     <!-- Route 1: Full width -->
                     <Border BackgroundColor="#ffffff" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="20">

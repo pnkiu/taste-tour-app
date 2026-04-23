@@ -35,7 +35,28 @@ public partial class ProfilePage : ContentPage
         if (LblDeviceName != null)
             LblDeviceName.Text = _deviceService.DeviceModel;
         if (LblFirstUsed != null)
-            LblFirstUsed.Text = $"Sử dụng từ {_deviceService.FirstUsedDate}";
+            LblFirstUsed.Text = AppLanguage.T(
+                $"Sử dụng từ {_deviceService.FirstUsedDate}",
+                $"Using since {_deviceService.FirstUsedDate}");
+
+        // Áp dụng ngôn ngữ giao diện
+        ApplyLanguage();
+    }
+
+    // ============================================================
+    //  ÁP DỤNG NGÔN NGỮ GIAO DIỆN
+    // ============================================================
+    private void ApplyLanguage()
+    {
+        LblEditProfile.Text   = AppLanguage.T("Chỉnh sửa hồ sơ", "Edit Profile");
+        LblSettings.Text      = AppLanguage.T("Cài đặt", "Settings");
+        LblHelpCenter.Text    = AppLanguage.T("Trung tâm trợ giúp", "Help Center");
+        LblDeviceInfoTitle.Text = AppLanguage.T("Thông tin thiết bị", "Device Information");
+        LblStatusTitle.Text   = AppLanguage.T("Trạng thái", "Status");
+
+        // Cập nhật sub-menu ngôn ngữ hiện tại
+        LblAppLangTitle.Text  = AppLanguage.T("Ngôn ngữ ứng dụng", "App Language");
+        LblAppLangSub.Text    = AppLanguage.IsEnglish ? "🇺🇸  English" : "🇻🇳  Tiếng Việt";
     }
 
     private void NavExplore_Tapped(object sender, EventArgs e)
@@ -63,6 +84,61 @@ public partial class ProfilePage : ContentPage
     }
 
     private bool _isCaiDatExpanded = false;
+
+    // ============================================================
+    //  CHỌN NGÔN NGỮ ỨNG DỤNG
+    // ============================================================
+    private static readonly Dictionary<string, (string display, string shortName)> _appLanguages = new()
+    {
+        { "vi", ("🇻🇳  Tiếng Việt", "Tiếng Việt") },
+        { "en", ("🇺🇸  English",       "English")   },
+    };
+
+    private async void AppLanguage_Tapped(object sender, EventArgs e)
+    {
+        string currentCode = AppLanguage.Code;
+        string currentName = _appLanguages.ContainsKey(currentCode)
+            ? _appLanguages[currentCode].shortName
+            : "Tiếng Việt";
+
+        string cancelText = AppLanguage.T("Hủy", "Cancel");
+        string titleText  = AppLanguage.T(
+            $"Ngôn ngữ ứng dụng (hiện: {currentName})",
+            $"App Language (current: {currentName})");
+
+        var options = _appLanguages.Select(kv =>
+            kv.Key == currentCode
+                ? $"✓  {kv.Value.display}"
+                : $"     {kv.Value.display}"
+        ).ToArray();
+
+        string result = await DisplayActionSheet(titleText, cancelText, null, options);
+        if (string.IsNullOrEmpty(result) || result == cancelText) return;
+
+        foreach (var kv in _appLanguages)
+        {
+            if (result.Contains(kv.Value.display))
+            {
+                if (kv.Key == currentCode) return; // không đổi
+
+                AppLanguage.SetLanguage(kv.Key);
+
+                string msg = AppLanguage.T(
+                    $"Đã đổi ngôn ngữ sang {kv.Value.shortName}.\n\nGiao diện sẽ cập nhật ngay.",
+                    $"Language changed to {kv.Value.shortName}.\n\nThe interface will update now.");
+                await DisplayAlert(AppLanguage.T("Ngôn ngữ", "Language"), msg, "OK");
+
+                // Reload ProfilePage với ngôn ngữ mới
+                if (Application.Current != null)
+                {
+                    Application.Current.MainPage = new NavigationPage(
+                        new ProfilePage(_dbService, _geofenceEngine, _syncService, _deviceService));
+                }
+                return;
+            }
+        }
+    }
+
 
     private async void CaiDat_Tapped(object sender, EventArgs e)
     {

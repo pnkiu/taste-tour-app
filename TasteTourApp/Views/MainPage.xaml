@@ -131,7 +131,7 @@
 
                 <!-- Header row -->
                 <Grid ColumnDefinitions="*,Auto" Padding="20,0,20,10">
-                    <Label Text="ĐIỂM THUYẾT MINH GẦN BẠN"
+                    <Label x:Name="LblBottomSheetHeader" Text="ĐIỂM THUYẾT MINH GẦN BẠN"
                            FontSize="11" FontAttributes="Bold" TextColor="#AAAAAA"
                            CharacterSpacing="1.2" VerticalOptions="Center" />
                     <Border Grid.Column="1" BackgroundColor="#E8F5E9"
@@ -152,7 +152,7 @@
                             <Label Text="📌" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
                         </Border>
                         <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                            <Label Text="Gần bạn nhất" FontSize="9" FontAttributes="Bold"
+                            <Label x:Name="LblNearestLabel" Text="Gần bạn nhất" FontSize="9" FontAttributes="Bold"
                                    TextColor="#2D6A4F" CharacterSpacing="0.8" />
                             <Label x:Name="LblNearestName" Text="--" FontSize="14"
                                    FontAttributes="Bold" TextColor="#1A1A1A"
@@ -370,7 +370,7 @@
                             StrokeShape="RoundRectangle 14"
                             Stroke="#C8E6D8"
                             StrokeThickness="1.5">
-                        <Label Text="🗺️  Chỉ đường"
+                        <Label x:Name="LblChiDuong" Text="🗺️  Chỉ đường"
                                FontSize="13" FontAttributes="Bold"
                                TextColor="#2D6A4F"
                                HorizontalOptions="Center"
@@ -389,7 +389,7 @@
                         <Border.Shadow>
                             <Shadow Brush="#2D6A4F" Offset="0,4" Radius="12" Opacity="0.35" />
                         </Border.Shadow>
-                        <Label Text="▶  Nghe thuyết minh"
+                        <Label x:Name="LblNgheThuyetMinh" Text="▶  Nghe thuyết minh"
                                FontSize="13" FontAttributes="Bold"
                                TextColor="White"
                                HorizontalOptions="Center"

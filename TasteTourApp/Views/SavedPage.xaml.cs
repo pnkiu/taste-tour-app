@@ -31,7 +31,23 @@ public partial class SavedPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        ApplyLanguage();
         await LoadSavedItems();
+    }
+
+    // ============================================================
+    //  ÁP DỤNG NGÔN NGỮ GIAO DIỆN
+    // ============================================================
+    private void ApplyLanguage()
+    {
+        LblPageTitle.Text       = AppLanguage.T("Yêu thích", "Favourites");
+        LblPageSubtitle.Text    = AppLanguage.T("Bộ sưu tập ẩm thực cá nhân của bạn", "Your personal culinary collection");
+        SearchEntry.Placeholder = AppLanguage.T("Tìm kiếm trong mục yêu thích...", "Search favourites...");
+        LblSavedTabLabel.Text   = AppLanguage.T("Địa điểm đã lưu", "Saved Places");
+        LblEmptyTitle.Text      = AppLanguage.T("Chưa có địa điểm nào được lưu", "No saved places yet");
+        LblEmptyHint.Text       = AppLanguage.T(
+            "Nhấn biểu tượng ❤️ trên trang chi tiết để lưu địa điểm yêu thích",
+            "Tap the ❤️ icon on a place's detail page to save it here");
     }
 
     // ============================================================
@@ -41,7 +57,9 @@ public partial class SavedPage : ContentPage
     {
         _allSaved = await _dbService.LayDanhSachYeuThich();
         RenderSavedCards(_allSaved);
-        LblSavedCount.Text = $"{_allSaved.Count} địa điểm";
+        LblSavedCount.Text = AppLanguage.IsEnglish
+            ? $"{_allSaved.Count} places"
+            : $"{_allSaved.Count} địa điểm";
     }
 
     // ============================================================
@@ -176,7 +194,7 @@ public partial class SavedPage : ContentPage
 
             var moTaLabel = new Label
             {
-                Text = quan.MoTa,
+                Text = AppLanguage.PoiText(quan.MoTa, quan.MoTaEn),
                 FontSize = 12,
                 TextColor = Color.FromArgb("#595C5D"),
                 Opacity = 0.85,
@@ -202,7 +220,7 @@ public partial class SavedPage : ContentPage
             unsaveRow.Children.Add(new Label { Text = "❤️", FontSize = 12, VerticalOptions = LayoutOptions.Center });
             unsaveRow.Children.Add(new Label
             {
-                Text = "Đã lưu",
+                Text = AppLanguage.T("Đã lưu", "Saved"),
                 FontSize = 11,
                 FontAttributes = FontAttributes.Bold,
                 TextColor = Color.FromArgb("#B91C1C"),
@@ -250,11 +268,14 @@ public partial class SavedPage : ContentPage
             ? _allSaved
             : _allSaved.Where(q =>
                 q.TenQuan.ToLowerInvariant().Contains(query) ||
-                (q.MoTa?.ToLowerInvariant().Contains(query) ?? false)
+                (q.MoTa?.ToLowerInvariant().Contains(query) ?? false) ||
+                (q.MoTaEn?.ToLowerInvariant().Contains(query) ?? false)
               ).ToList();
 
         RenderSavedCards(filtered);
-        LblSavedCount.Text = $"{filtered.Count} địa điểm";
+        LblSavedCount.Text = AppLanguage.IsEnglish
+            ? $"{filtered.Count} places"
+            : $"{filtered.Count} địa điểm";
     }
 
     // ============================================================

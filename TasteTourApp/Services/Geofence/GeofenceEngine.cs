@@ -114,8 +114,6 @@ namespace TasteTourApp.Services.Geofence
                         Quan = q,
                         Distance = Haversine(userLat, userLng, q.ViDo, q.KinhDo)
                     })
-                    .OrderBy(x => x.Quan.MucUuTien)
-                    .ThenBy(x => x.Distance)
                     .ToList();
 
                 // ── Bước 1: Phát NearestPoiChanged (UI highlight, không cần trong bán kính) ──
@@ -137,13 +135,14 @@ namespace TasteTourApp.Services.Geofence
                     x.Distance <= (x.Quan.BanKinhMet > 0 ? x.Quan.BanKinhMet : 50)).ToList();
 
                 //Nhóm Enter: Lọc ra những quán có số mét <= BanKinhMet.
-                //Nếu có quán thỏa mãn: Code sẽ sắp xếp chọn ra quán gần nhất và có MucUuTien cao nhất. Sau đó, nó kiểm tra biến _lastTriggered xem đã qua 10 phút chưa. Nếu qua rồi, gửi sự kiện PoiTriggered(loại Enter) ra ngoài để MainPage mở loa đọc thuyết minh.
+                // Nếu có nhiều quán cùng chồng bán kính Enter, ưu tiên POI có MucUuTien cao hơn.
+                // Nếu trùng mức ưu tiên thì mới xét tới khoảng cách gần hơn.
 
                 if (enterPois.Any())
                 {
                     var winner = enterPois
-                        .OrderBy(x => x.Distance)                 // 1. CHUẨN NHẤT: Quán nào gần nhất bằng số mét thì ĂN!
-                        .ThenBy(x => x.Quan.MucUuTien)            // 2. Nếu lỡ 2 quán cách đúng 10m y chang nhau, thì quán nào có MucUuTien = 1 sẽ thắng.
+                        .OrderByDescending(x => x.Quan.MucUuTien) // 1. POI có mức ưu tiên cao hơn sẽ thắng khi vùng bị chồng lấn
+                        .ThenBy(x => x.Distance)                  // 2. Nếu trùng ưu tiên, chọn POI gần người dùng hơn
                         .First();
 
                     if (!_lastTriggered.TryGetValue(winner.Quan.Id, out var lastTime) || DateTime.UtcNow - lastTime >= Cooldown)
@@ -161,9 +160,9 @@ namespace TasteTourApp.Services.Geofence
 
                     if (nearbyPois.Any())
                     {
-                        var winner = enterPois
-                            .OrderBy(x => x.Distance)                 // 1. CHUẨN NHẤT: Quán nào gần nhất bằng số mét thì ĂN!
-                            .ThenBy(x => x.Quan.MucUuTien)            // 2. Nếu lỡ 2 quán cách đúng 10m y chang nhau, thì quán nào có MucUuTien = 1 sẽ thắng.
+                        var winner = nearbyPois
+                            .OrderByDescending(x => x.Quan.MucUuTien) // 1. Nearby cũng tuân theo luật ưu tiên giống Enter
+                            .ThenBy(x => x.Distance)                  // 2. Cùng ưu tiên thì quán gần hơn thắng
                             .First();
                         if (!_lastTriggered.TryGetValue(winner.Quan.Id, out var lastTime) || DateTime.UtcNow - lastTime >= Cooldown)
                         {

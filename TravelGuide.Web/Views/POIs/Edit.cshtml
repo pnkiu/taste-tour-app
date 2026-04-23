@@ -51,7 +51,8 @@
                         </div>
                         <div class="col-md-6 form-group">
                             <label asp-for="Priority" class="control-label font-weight-bold">Mức ưu tiên</label>
-                            <input asp-for="Priority" class="form-control" />
+                            <input asp-for="Priority" class="form-control" min="1" />
+                            <small class="form-text text-muted">Khi chồng lấn nhiều vùng POI, số ưu tiên cao hơn sẽ được phát trước.</small>
                             <span asp-validation-for="Priority" class="text-danger"></span>
                         </div>
                     </div>

@@ -16,10 +16,11 @@ namespace TasteTourApp.Views
         private List<QuanAn> _danhSachQuan = new();
         private QuanAn? _quanDangChon = null;
         private bool _sheetDangMo = false;
+        private bool _isMapReady = false;
 
-    // TTS (Text-to-Speech)
-    private CancellationTokenSource? _ttsCts = null;
-    private bool _dangPhatTTS = false;
+        // TTS (Text-to-Speech)
+        private CancellationTokenSource? _ttsCts = null;
+        private bool _dangPhatTTS = false;
 
     // Android MediaPlayer — phát file audio từ server
 #if ANDROID
@@ -255,12 +256,42 @@ namespace TasteTourApp.Views
 
         // Set bottom sheet ở peek height ban đầu
         BottomSheetDanhSach.HeightRequest = _sheetMinHeight;
+        BanDoWebView.Navigated += BanDoWebView_Navigated;
     }
+        // ============================================================
+        //  SỰ KIỆN WEBVIEW TẢI XONG HTML
+        // ============================================================
+        private async void BanDoWebView_Navigated(object? sender, WebNavigatedEventArgs e)
+        {
+            _isMapReady = true; // Bật cờ cho phép C# giao tiếp với JS
 
-    // ── GeofenceEngine event handlers ────────────────────────────────
+            // Bắn bù tọa độ user nếu C# đã lấy được trước đó
+            if (_hasUserLocation)
+            {
+                //var latStr = _userLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                //var lngStr = _userLng.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                //await BanDoWebView.EvaluateJavaScriptAsync($"setUserLocation({latStr}, {lngStr})");
 
-    /// Tự động phát TTS khi người dùng VÀO vùng POI (Enter), chỉ notify khi Nearby
-    private async void OnPoiTriggered(object? sender, GeofenceTrigger trigger)
+                
+                if (_isMapReady)
+                {
+                    var latStr = _userLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    var lngStr = _userLng.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    await BanDoWebView.EvaluateJavaScriptAsync($"setUserLocation({latStr}, {lngStr})");
+                }
+
+                // Bắn bù luôn highlight điểm gần nhất
+                if (_isMapReady)
+                {
+                    await BanDoWebView.EvaluateJavaScriptAsync($"setNearestMarker('{_nearestPoiId}')");
+                }
+            }
+        }
+
+        // ── GeofenceEngine event handlers ────────────────────────────────
+
+        /// Tự động phát TTS khi người dùng VÀO vùng POI (Enter), chỉ notify khi Nearby
+        private async void OnPoiTriggered(object? sender, GeofenceTrigger trigger)
     {
         System.Diagnostics.Debug.WriteLine(
             $"[Geofence] {trigger.Type}: {trigger.Quan.TenQuan} ({trigger.DistanceMeters:F0}m)");
@@ -290,12 +321,15 @@ namespace TasteTourApp.Views
 
         await MainThread.InvokeOnMainThreadAsync(async () =>
         {
-            await BanDoWebView.EvaluateJavaScriptAsync($"setNearestMarker(\'{e.poiId}\')");
+            if (_isMapReady)
+            {
+                await BanDoWebView.EvaluateJavaScriptAsync($"setNearestMarker(\'{e.poiId}\')");
+            }
             NearestPoiCard.IsVisible = true;
             LblNearestName.Text = quan.TenQuan;
             LblNearestDistance.Text = e.distanceMeters < 1000
-                ? $"📍 {e.distanceMeters:F0}m cách bạn"
-                : $"📍 {e.distanceMeters / 1000:F1}km cách bạn";
+                ? AppLanguage.T($"📍 {e.distanceMeters:F0}m cách bạn", $"📍 {e.distanceMeters:F0}m away")
+                : AppLanguage.T($"📍 {e.distanceMeters / 1000:F1}km cách bạn", $"📍 {e.distanceMeters / 1000:F1}km away");
             RenderPoiCards(_danhSachQuan);
         });
     }
@@ -318,12 +352,27 @@ namespace TasteTourApp.Views
         _geofenceEngine.NearestPoiChanged += OnNearestPoiChanged;
         _syncService.SyncStatusChanged += OnSyncStatusChanged;
 
+        // Áp dụng ngôn ngữ giao diện
+        ApplyLanguage();
+
         // Load dữ liệu local trước (hiển thị ngay lập tức)
         await LoadDuLieuTuKho();
         _ = GetUserLocationAsync(); // Fire and forget
 
         // Đồng bộ từ API sau (không chặn UI)
         _ = _syncService.SyncAsync();
+    }
+
+    // ============================================================
+    //  ÁP DỤNG NGÔN NGỮ GIAO DIỆN
+    // ============================================================
+    private void ApplyLanguage()
+    {
+        LblSearchPlaceholder.Text   = AppLanguage.T("Tìm quán, địa điểm...", "Search places...");
+        LblBottomSheetHeader.Text   = AppLanguage.T("ĐIỂM THUYẾT MINH GẦN BẠN", "NEARBY POINTS OF INTEREST");
+        LblNearestLabel.Text        = AppLanguage.T("Gần bạn nhất", "Nearest to you");
+        LblChiDuong.Text            = AppLanguage.T("🗺️  Chỉ đường", "🗺️  Directions");
+        LblNgheThuyetMinh.Text      = AppLanguage.T("▶  Nghe thuyết minh", "▶  Audio Guide");
     }
 
     // ============================================================
@@ -335,7 +384,9 @@ namespace TasteTourApp.Views
         var html = TaoHtmlBanDo(_danhSachQuan);
         BanDoWebView.Source = new HtmlWebViewSource { Html = html };
         RenderPoiCards(_danhSachQuan);
-        LblPoiCount.Text = $"{_danhSachQuan.Count} điểm";
+        LblPoiCount.Text = AppLanguage.IsEnglish
+            ? $"{_danhSachQuan.Count} places"
+            : $"{_danhSachQuan.Count} điểm";
     }
 
     // ============================================================
@@ -344,8 +395,8 @@ namespace TasteTourApp.Views
 
     // 🧪 TỌA ĐỘ MẪU — thay đổi tại đây để test các vị trí khác nhau
     // Vị trí này nằm trên đường Vĩnh Khánh, gần các quán ốc
-    private const double MOCK_LAT = 10.761626047097499;
-        private const double MOCK_LNG = 106.70232518826722;
+    private const double MOCK_LAT = 10.761615; // 10.761615, 106.702392
+        private const double MOCK_LNG = 106.702392;
 
         private async Task GetUserLocationAsync()
     {
@@ -422,8 +473,8 @@ namespace TasteTourApp.Views
             NearestPoiCard.IsVisible = true;
             LblNearestName.Text = nearest.TenQuan;
             LblNearestDistance.Text = minDist < 1000
-                ? $"📍 {minDist:F0}m cách bạn"
-                : $"📍 {minDist / 1000:F1}km cách bạn";
+                ? AppLanguage.T($"📍 {minDist:F0}m cách bạn", $"📍 {minDist:F0}m away")
+                : AppLanguage.T($"📍 {minDist / 1000:F1}km cách bạn", $"📍 {minDist / 1000:F1}km away");
 
             // Re-render POI cards để highlight card gần nhất
             RenderPoiCards(_danhSachQuan);
@@ -494,7 +545,7 @@ namespace TasteTourApp.Views
             var heroContent = new Grid();
             heroContent.Children.Add(new Label { Text = emoji, FontSize = 32, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center });
 
-            // Badge "Gần nhất" trên hero
+            // Badge "Gần nhất" / "Nearest" trên hero
             if (isNearest)
             {
                 var badge = new Border
@@ -509,7 +560,7 @@ namespace TasteTourApp.Views
                 };
                 badge.Content = new Label
                 {
-                    Text = "⭐ Gần nhất",
+                    Text = AppLanguage.T("⭐ Gần nhất", "⭐ Nearest"),
                     FontSize = 8,
                     FontAttributes = FontAttributes.Bold,
                     TextColor = Colors.White,
@@ -555,7 +606,7 @@ namespace TasteTourApp.Views
             {
                 subRow.Children.Add(new Label
                 {
-                    Text = "Vĩnh Khánh",
+                    Text = AppLanguage.T("Vĩnh Khánh", "Vinh Khanh"),
                     FontSize = 10,
                     TextColor = Color.FromArgb("#2D6A4F"),
                     FontAttributes = FontAttributes.Bold,
@@ -619,17 +670,23 @@ namespace TasteTourApp.Views
         _quanDangChon = quan;
         _sheetDangMo = true;
 
-        // Điền dữ liệu
+        // Điền dữ liệu (theo ngôn ngữ hiện tại)
         LblTenQuan.Text = quan.TenQuan;
-        LblMoTa.Text = quan.MoTa;
+        LblMoTa.Text    = AppLanguage.PoiText(quan.MoTa, quan.MoTaEn);
         LblAudioTen.Text = quan.TenQuan;
+        string distLabel = AppLanguage.T("Vĩnh Khánh, Q.4", "Vinh Khanh, District 4");
         LblKhoangCach.Text = _hasUserLocation
-            ? $"{TinhKhoangCach(_userLat, _userLng, quan.ViDo, quan.KinhDo):F0}m · Vĩnh Khánh, Q.4"
-            : "Vĩnh Khánh, Q.4";
+            ? $"{TinhKhoangCach(_userLat, _userLng, quan.ViDo, quan.KinhDo):F0}m · {distLabel}"
+            : distLabel;
         var (_, currentLangName, _) = GetCurrentTtsLang();
-        LblAudioSub.Text = !string.IsNullOrWhiteSpace(quan.AudioContent)
-            ? "File Audio · MP3"
-            : $"{currentLangName} · TTS";
+        // Xác định nguồn audio hiện có dựa vào ngôn ngữ
+        string? activeAudio = AppLanguage.IsEnglish ? quan.AudioContentEn : quan.AudioContent;
+        string? fallbackAudio = AppLanguage.IsEnglish ? quan.AudioContent : null; // fallback nếu EN chưa có file
+        LblAudioSub.Text = !string.IsNullOrWhiteSpace(activeAudio)
+            ? AppLanguage.T("File Audio · MP3", "Audio File · MP3")
+            : !string.IsNullOrWhiteSpace(fallbackAudio)
+                ? AppLanguage.T("File Audio · MP3", "Audio File · MP3")
+                : $"{currentLangName} · TTS";
         LblPlayIcon.Text = "▶";
         LblRating.Text = "4.5";
 
@@ -792,11 +849,11 @@ namespace TasteTourApp.Views
         LblPlayIcon.Text = "▶";
 
         var (_, langName, _) = GetCurrentTtsLang();
-        LblAudioSub.Text = $"{langName} · TTS";
+        LblAudioSub.Text = AppLanguage.T($"{langName} · TTS", $"{langName} · TTS");
     }
 
     /// <summary>
-    /// Phát audio: ưu tiên file audio từ server, fallback về TTS nếu không có
+    /// Phát audio: ưu tiên file audio từ server (theo ngôn ngữ), fallback TTS nếu không có
     /// </summary>
     private async Task PhatTts()
     {
@@ -805,24 +862,40 @@ namespace TasteTourApp.Views
         _dangPhatTTS = true;
         LblPlayIcon.Text = "⏸";
 
-        // ── TRƯỜNG HỢP 1: Có file audio từ server → phát qua MediaPlayer ──
-        if (!string.IsNullOrWhiteSpace(_quanDangChon.AudioContent))
+        // ── TRƯỜNG HỢP 1: Có file audio theo ngôn ngữ hiện tại ──
+        string? audioByLang = AppLanguage.IsEnglish
+            ? _quanDangChon.AudioContentEn
+            : _quanDangChon.AudioContent;
+
+        if (!string.IsNullOrWhiteSpace(audioByLang))
         {
-            await PhatFileAudio(_quanDangChon.AudioContent);
+            await PhatFileAudio(audioByLang);
+            return;
+        }
+
+        // ── TRƯỜNG HỢP 1b: Fallback sang audio ngôn ngữ kia nếu chưa có bản EN ──
+        string? audioFallback = AppLanguage.IsEnglish
+            ? _quanDangChon.AudioContent  // EN không có → dùng VI
+            : null;
+
+        if (!string.IsNullOrWhiteSpace(audioFallback))
+        {
+            await PhatFileAudio(audioFallback);
             return;
         }
 
         // ── TRƯỜNG HỢP 2: Không có file audio → fallback TTS từ mô tả ──
-        if (string.IsNullOrWhiteSpace(_quanDangChon.MoTa))
+        string? ttsText = AppLanguage.PoiText(_quanDangChon.MoTa, _quanDangChon.MoTaEn);
+        if (string.IsNullOrWhiteSpace(ttsText))
         {
             _dangPhatTTS = false;
             LblPlayIcon.Text = "▶";
-            LblAudioSub.Text = "Chưa có nội dung audio";
+            LblAudioSub.Text = AppLanguage.T("Chưa có nội dung audio", "No audio content available");
             return;
         }
 
         var (langCode, langName, langPrefix) = GetCurrentTtsLang();
-        LblAudioSub.Text = $"▶ Đang đọc · {langName}...";
+        LblAudioSub.Text = AppLanguage.T($"▶ Đang đọc · {langName}...", $"▶ Reading · {langName}...");
 
         _ttsCts = new CancellationTokenSource();
         try
@@ -833,13 +906,14 @@ namespace TasteTourApp.Views
                 l.Language.StartsWith(langPrefix, StringComparison.OrdinalIgnoreCase));
             if (matchedLocale != null) options.Locale = matchedLocale;
 
-            await TextToSpeech.SpeakAsync(_quanDangChon.MoTa, options, _ttsCts.Token);
+            // Dùng nội dung theo ngôn ngữ hiện tại
+            await TextToSpeech.SpeakAsync(ttsText!, options, _ttsCts.Token);
 
             if (_dangPhatTTS)
             {
                 _dangPhatTTS = false;
                 LblPlayIcon.Text = "▶";
-                LblAudioSub.Text = $"Đã phát xong · {langName}";
+                LblAudioSub.Text = AppLanguage.T($"Đã phát xong · {langName}", $"Done · {langName}");
             }
         }
         catch (OperationCanceledException) { /* bị hủy bởi StopTts */ }
@@ -847,76 +921,97 @@ namespace TasteTourApp.Views
         {
             _dangPhatTTS = false;
             LblPlayIcon.Text = "▶";
-            LblAudioSub.Text = $"Lỗi TTS: {ex.Message}";
+            LblAudioSub.Text = AppLanguage.T($"Lỗi TTS: {ex.Message}", $"TTS error: {ex.Message}");
         }
     }
 
-    /// <summary>
-    /// Phát file audio URL từ server qua Android MediaPlayer
-    /// </summary>
-    private async Task PhatFileAudio(string audioPath)
-    {
-        string baseUrl = "http://192.168.31.240:5220";
-        string audioUrl = audioPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)
-            ? audioPath
-            : $"{baseUrl}{audioPath}";
+        /// <summary>
+        /// Phát file audio URL từ server qua Android MediaPlayer
+        /// </summary>
+        /// <summary>
+        /// Phát file audio URL từ server qua Android MediaPlayer
+        /// </summary>
+        private async Task PhatFileAudio(string audioPath)
+        {
+            string baseUrl = "http://192.168.1.109:5220";
 
-        LblAudioSub.Text = "▶ Đang phát audio...";
+            // 1. DỌN DẸP LINK: Cắt bỏ khoảng trắng thừa, thay khoảng trắng giữa chữ thành %20
+            string cleanPath = audioPath.Trim().Replace(" ", "%20");
+            string audioUrl = cleanPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                ? cleanPath
+                : $"{baseUrl}/{cleanPath.TrimStart('/')}";
+
+            System.Diagnostics.Debug.WriteLine($"[TEST AUDIO URL]: Đang kéo file từ -> {audioUrl}");
+            LblAudioSub.Text = "▶ Đang chuẩn bị audio...";
 
 #if ANDROID
-        var tcs = new TaskCompletionSource<bool>();
-        try
-        {
-            // Dọn player cũ nếu có
-            if (_mediaPlayer != null)
+            var tcs = new TaskCompletionSource<bool>();
+
+            // BẮT BUỘC: Phải gọi Android.Media.MediaPlayer trên Main UI Thread
+            await MainThread.InvokeOnMainThreadAsync(async () =>
             {
-                try { _mediaPlayer.Stop(); } catch { }
-                _mediaPlayer.Release();
-                _mediaPlayer = null;
-            }
+                try
+                {
+                    // Dọn player cũ an toàn
+                    if (_mediaPlayer != null)
+                    {
+                        try { if (_mediaPlayer.IsPlaying) _mediaPlayer.Stop(); } catch { }
+                        _mediaPlayer.Reset();
+                        _mediaPlayer.Release();
+                        _mediaPlayer = null;
+                    }
 
-            _mediaPlayer = new Android.Media.MediaPlayer();
-            _mediaPlayer.SetAudioAttributes(
-                new Android.Media.AudioAttributes.Builder()
-                    .SetContentType(Android.Media.AudioContentType.Music)
-                    .SetUsage(Android.Media.AudioUsageKind.Media)
-                    .Build());
+                    _mediaPlayer = new Android.Media.MediaPlayer();
+                    _mediaPlayer.SetAudioAttributes(
+                        new Android.Media.AudioAttributes.Builder()
+                            .SetContentType(Android.Media.AudioContentType.Music)
+                            .SetUsage(Android.Media.AudioUsageKind.Media)
+                            .Build());
 
-            await _mediaPlayer.SetDataSourceAsync(audioUrl);
-            _mediaPlayer.PrepareAsync();
+                    // 2. DÙNG URI THAY VÌ STRING: Giúp Android phân giải mạng ổn định hơn
+                    var uri = Android.Net.Uri.Parse(audioUrl);
+                    await _mediaPlayer.SetDataSourceAsync(Android.App.Application.Context, uri);
 
-            _mediaPlayer.Prepared += (s, e) => _mediaPlayer.Start();
+                    _mediaPlayer.Prepared += (s, e) =>
+                    {
+                        LblAudioSub.Text = "▶ Đang phát audio...";
+                        _mediaPlayer.Start();
+                    };
 
-            _mediaPlayer.Completion += (s, e) =>
-            {
-                MainThread.BeginInvokeOnMainThread(() =>
+                    _mediaPlayer.Completion += (s, e) =>
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            _dangPhatTTS = false;
+                            LblPlayIcon.Text = "▶";
+                            LblAudioSub.Text = AppLanguage.T("Đã phát xong", "Playback complete");
+                        });
+                        tcs.TrySetResult(true);
+                    };
+
+                    _mediaPlayer.Error += (s, e) =>
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            _dangPhatTTS = false;
+                            LblPlayIcon.Text = "▶";
+                            LblAudioSub.Text = AppLanguage.T($"Lỗi phát audio ({e.What})", $"Audio error ({e.What})");
+                        });
+                        tcs.TrySetResult(false);
+                    };
+
+                    _mediaPlayer.PrepareAsync(); // Bắt đầu buffer mạng
+                }
+                catch (Exception innerEx)
                 {
                     _dangPhatTTS = false;
                     LblPlayIcon.Text = "▶";
-                    LblAudioSub.Text = "Đã phát xong";
-                });
-                tcs.TrySetResult(true);
-            };
-
-            _mediaPlayer.Error += (s, e) =>
-            {
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    _dangPhatTTS = false;
-                    LblPlayIcon.Text = "▶";
-                    LblAudioSub.Text = $"Lỗi phát audio ({e.What})";
-                });
-                tcs.TrySetResult(false);
-            };
+                    LblAudioSub.Text = $"Lỗi Setup: {innerEx.Message}";
+                    tcs.TrySetResult(false);
+                }
+            });
 
             await tcs.Task;
-        }
-        catch (Exception ex)
-        {
-            _dangPhatTTS = false;
-            LblPlayIcon.Text = "▶";
-            LblAudioSub.Text = $"Lỗi: {ex.Message}";
-        }
 #else
         // Fallback cho các platform khác: dùng TTS
         _dangPhatTTS = false;
@@ -924,12 +1019,12 @@ namespace TasteTourApp.Views
         LblPlayIcon.Text = "▶";
         await Task.CompletedTask;
 #endif
-    }
+        }
 
-    // ============================================================
-    //  CÁC NÚT
-    // ============================================================
-    private async void BtnPlay_Tapped(object sender, EventArgs e)
+        // ============================================================
+        //  CÁC NÚT
+        // ============================================================
+        private async void BtnPlay_Tapped(object sender, EventArgs e)
     {
         if (_quanDangChon == null) return;
 

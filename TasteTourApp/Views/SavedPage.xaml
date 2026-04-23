@@ -14,8 +14,8 @@
             <VerticalStackLayout Padding="24,24,24,48" Spacing="0" Margin="0,64,0,0">
                 <!-- Editorial Header -->
                 <VerticalStackLayout Spacing="6" Margin="0,0,0,20">
-                    <Label Text="Yêu thích" FontSize="32" FontAttributes="Bold" TextColor="#2c2f30"/>
-                    <Label Text="Bộ sưu tập ẩm thực cá nhân của bạn"
+                    <Label x:Name="LblPageTitle" Text="Yêu thích" FontSize="32" FontAttributes="Bold" TextColor="#2c2f30"/>
+                    <Label x:Name="LblPageSubtitle" Text="Bộ sưu tập ẩm thực cá nhân của bạn"
                            FontSize="15" TextColor="#595c5d" Opacity="0.85"/>
                 </VerticalStackLayout>
 
@@ -42,7 +42,7 @@
                             <Border.Shadow>
                                 <Shadow Brush="Black" Offset="0,2" Radius="6" Opacity="0.06"/>
                             </Border.Shadow>
-                            <Label Text="Địa điểm đã lưu" TextColor="#376454"
+                            <Label x:Name="LblSavedTabLabel" Text="Địa điểm đã lưu" TextColor="#376454"
                                    FontAttributes="Bold" FontSize="13" VerticalOptions="Center"/>
                         </Border>
                     </Border>
@@ -69,10 +69,10 @@
                         <Label Text="🤍" FontSize="36"
                                HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>
-                    <Label Text="Chưa có địa điểm nào được lưu"
+                    <Label x:Name="LblEmptyTitle" Text="Chưa có địa điểm nào được lưu"
                            FontSize="17" FontAttributes="Bold"
                            TextColor="#2c2f30" HorizontalOptions="Center"/>
-                    <Label Text="Nhấn biểu tượng ❤️ trên trang chi tiết để lưu địa điểm yêu thích"
+                    <Label x:Name="LblEmptyHint" Text="Nhấn biểu tượng ❤️ trên trang chi tiết để lưu địa điểm yêu thích"
                            FontSize="13" TextColor="#595c5d" Opacity="0.8"
                            HorizontalOptions="Center" HorizontalTextAlignment="Center"
                            LineHeight="1.5"/>

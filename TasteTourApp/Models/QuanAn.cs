@@ -39,7 +39,7 @@ namespace TasteTourApp.Models
         public double BanKinhMet { get; set; } = 50;  // Geofence radius (mét)
 
         [JsonPropertyName("priority")]
-        public int MucUuTien { get; set; } = 1;       // 1-10
+        public int MucUuTien { get; set; } = 1;       // Số càng lớn càng được ưu tiên
         public int ThuTuHienThi { get; set; }         // Thứ tự trong danh sách
         public bool IsSaved { get; set; } = false;    // Trạng thái yêu thích
     }
