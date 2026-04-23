@@ -64,7 +64,7 @@ namespace TravelGuide.Web.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Description,Latitude,Longitude,Radius,Priority,ImageUrl,AudioContent,MapLink")] POI pOI)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description,Latitude,Longitude,Radius,Priority,ImageUrl,AudioContent,MapLink,Tags")] POI pOI)
         {
             if (ModelState.IsValid)
             {
@@ -95,68 +95,86 @@ namespace TravelGuide.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id,
-            [Bind("Id,Name,Description,Latitude,Longitude,Radius,Priority,ImageUrl,AudioContent,MapLink")] POI pOI,
+    [Bind("Id,Name,Description,Latitude,Longitude,Radius,Priority,ImageUrl,AudioContent,AudioContentEn,MapLink,Tags")] POI pOI,
             IFormFile? imageFile,
-            IFormFile? audioFile)
+            IFormFile? audioFile,
+            IFormFile? audioFileEn) // <-- Thêm tham số nhận file tiếng Anh
         {
             if (id != pOI.Id)
             {
                 return NotFound();
             }
 
-            // Xử lý upload ảnh nếu người dùng chọn file mới
-            if (imageFile != null && imageFile.Length > 0)
-            {
-                var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "pois");
-                Directory.CreateDirectory(uploadsFolder);
-
-                var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(imageFile.FileName)}";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await imageFile.CopyToAsync(stream);
-                }
-
-                pOI.ImageUrl = $"/uploads/pois/{uniqueFileName}";
-            }
-            // Nếu không chọn file mới, giữ nguyên ImageUrl từ hidden input
-
-            // Xử lý upload audio nếu người dùng chọn file mới
-            if (audioFile != null && audioFile.Length > 0)
-            {
-                var audiosFolder = Path.Combine(_env.WebRootPath, "uploads", "audios");
-                Directory.CreateDirectory(audiosFolder);
-
-                var uniqueAudioName = $"{Guid.NewGuid()}_{Path.GetFileName(audioFile.FileName)}";
-                var audioPath = Path.Combine(audiosFolder, uniqueAudioName);
-
-                using (var stream = new FileStream(audioPath, FileMode.Create))
-                {
-                    await audioFile.CopyToAsync(stream);
-                }
-
-                pOI.AudioContent = $"/uploads/audios/{uniqueAudioName}";
-            }
-            // Nếu không chọn file mới, giữ nguyên AudioContent từ hidden input
-
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // 1. Xử lý upload ảnh (Giữ nguyên cấu trúc của bạn)
+                    if (imageFile != null && imageFile.Length > 0)
+                    {
+                        var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "pois");
+                        Directory.CreateDirectory(uploadsFolder);
+                        var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(imageFile.FileName)}";
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        using (var stream = new FileStream(filePath, FileMode.Create)) { await imageFile.CopyToAsync(stream); }
+                        pOI.ImageUrl = $"/uploads/pois/{uniqueFileName}";
+                    }
+
+                    // 2. Xử lý upload audio TIẾNG VIỆT & Đồng bộ sang bảng Audios
+                    if (audioFile != null && audioFile.Length > 0)
+                    {
+                        var audiosFolder = Path.Combine(_env.WebRootPath, "uploads", "audios");
+                        Directory.CreateDirectory(audiosFolder);
+                        var uniqueAudioName = $"vn_{Guid.NewGuid()}_{Path.GetFileName(audioFile.FileName)}";
+                        var audioPath = Path.Combine(audiosFolder, uniqueAudioName);
+                        using (var stream = new FileStream(audioPath, FileMode.Create)) { await audioFile.CopyToAsync(stream); }
+                        pOI.AudioContent = $"/uploads/audios/{uniqueAudioName}";
+
+                        // -- MA THUẬT: Đẩy dữ liệu sang bảng Audio --
+                        var existingVnAudio = await _context.Audios.FirstOrDefaultAsync(a => a.PoiId == pOI.Id && a.Language == "Tiếng Việt (VN)");
+                        if (existingVnAudio != null)
+                        {
+                            existingVnAudio.FileUrl = pOI.AudioContent;
+                            existingVnAudio.Title = $"Giọng thuyết minh Tiếng Việt - {pOI.Name}";
+                            _context.Update(existingVnAudio);
+                        }
+                        else
+                        {
+                            _context.Add(new Audio { PoiId = pOI.Id, Language = "Tiếng Việt (VN)", FileUrl = pOI.AudioContent, Title = $"Giọng thuyết minh Tiếng Việt - {pOI.Name}" });
+                        }
+                    }
+
+                    // 3. Xử lý upload audio TIẾNG ANH & Đồng bộ sang bảng Audios
+                    if (audioFileEn != null && audioFileEn.Length > 0)
+                    {
+                        var audiosFolder = Path.Combine(_env.WebRootPath, "uploads", "audios");
+                        Directory.CreateDirectory(audiosFolder);
+                        var uniqueAudioName = $"en_{Guid.NewGuid()}_{Path.GetFileName(audioFileEn.FileName)}";
+                        var audioPath = Path.Combine(audiosFolder, uniqueAudioName);
+                        using (var stream = new FileStream(audioPath, FileMode.Create)) { await audioFileEn.CopyToAsync(stream); }
+                        pOI.AudioContentEn = $"/uploads/audios/{uniqueAudioName}";
+
+                        // -- MA THUẬT: Đẩy dữ liệu sang bảng Audio --
+                        var existingEnAudio = await _context.Audios.FirstOrDefaultAsync(a => a.PoiId == pOI.Id && a.Language == "English (EN)");
+                        if (existingEnAudio != null)
+                        {
+                            existingEnAudio.FileUrl = pOI.AudioContentEn;
+                            existingEnAudio.Title = $"English Audio - {pOI.Name}";
+                            _context.Update(existingEnAudio);
+                        }
+                        else
+                        {
+                            _context.Add(new Audio { PoiId = pOI.Id, Language = "English (EN)", FileUrl = pOI.AudioContentEn, Title = $"English Audio - {pOI.Name}" });
+                        }
+                    }
+
                     _context.Update(pOI);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!POIExists(pOI.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!POIExists(pOI.Id)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }

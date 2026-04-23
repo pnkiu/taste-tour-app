@@ -60,10 +60,8 @@
                     <div class="form-group">
                         <label class="control-label font-weight-bold text-info">Ảnh minh họa</label>
 
-                        @* Giữ lại đường dẫn ảnh cũ nếu không chọn ảnh mới *@
                         <input type="hidden" asp-for="ImageUrl" />
 
-                        @* Hiển thị ảnh hiện tại (nếu có) *@
                         @if (!string.IsNullOrEmpty(Model.ImageUrl))
                         {
                             <div class="mb-2">
@@ -88,37 +86,65 @@
                         <small class="form-text text-muted">Định dạng hỗ trợ: JPG, PNG, GIF, WEBP. Để trống nếu không muốn thay đổi ảnh.</small>
                     </div>
 
-                    <div class="form-group">
-                        <label class="control-label font-weight-bold text-info">File Audio</label>
+                    <div class="form-group border-bottom pb-3">
+                        <label class="control-label font-weight-bold text-success"><i class="fas fa-volume-up mr-2"></i>Thuyết minh (Tiếng Việt)</label>
 
-                        @* Giữ lại đường dẫn audio cũ nếu không chọn file mới *@
                         <input type="hidden" asp-for="AudioContent" />
 
-                        @* Hiển thị audio player hiện tại (nếu có) *@
                         @if (!string.IsNullOrEmpty(Model.AudioContent))
                         {
                             <div class="mb-2">
-                                <small class="text-muted d-block mb-1">Audio hiện tại:</small>
-                                <audio id="audioPreview" controls class="w-100" style="border-radius: 8px;">
+                                <audio id="audioPreview" controls class="w-100" style="border-radius: 8px; height: 35px;">
                                     <source src="@Model.AudioContent" />
-                                    Trình duyệt không hỗ trợ audio.
                                 </audio>
                             </div>
                         }
                         else
                         {
                             <div class="mb-2" id="audioPreviewWrap" style="display:none;">
-                                <small class="text-muted d-block mb-1">Preview audio mới:</small>
-                                <audio id="audioPreview" controls class="w-100" style="border-radius: 8px;"></audio>
+                                <audio id="audioPreview" controls class="w-100" style="border-radius: 8px; height: 35px;"></audio>
                             </div>
                         }
 
                         <div class="custom-file">
                             <input type="file" class="custom-file-input" id="audioFile" name="audioFile"
                                    accept="audio/*" onchange="previewAudio(this)" />
-                            <label class="custom-file-label" for="audioFile">Chọn file audio từ máy...</label>
+                            <label class="custom-file-label" for="audioFile">Tải lên File Tiếng Việt...</label>
                         </div>
-                        <small class="form-text text-muted">Định dạng hỗ trợ: MP3, WAV, OGG, M4A. Để trống nếu không muốn thay đổi.</small>
+                    </div>
+
+                    <div class="form-group p-3 rounded" style="background-color: #f8f9fc; border: 1px dashed #4e73df;">
+                        <label class="control-label font-weight-bold text-primary"><i class="fas fa-language mr-2"></i>Thuyết minh (English)</label>
+
+                        <input type="hidden" asp-for="AudioContentEn" />
+
+                        @if (!string.IsNullOrEmpty(Model.AudioContentEn))
+                        {
+                            <div class="mb-2">
+                                <audio id="audioPreviewEn" controls class="w-100" style="border-radius: 8px; height: 35px;">
+                                    <source src="@Model.AudioContentEn" />
+                                </audio>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-2" id="audioPreviewWrapEn" style="display:none;">
+                                <audio id="audioPreviewEn" controls class="w-100" style="border-radius: 8px; height: 35px;"></audio>
+                            </div>
+                        }
+
+                        <div class="custom-file">
+                            <input type="file" class="custom-file-input" id="audioFileEn" name="audioFileEn"
+                                   accept="audio/*" onchange="previewAudioEn(this)" />
+                            <label class="custom-file-label" for="audioFileEn">Tải lên File English...</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group border-bottom pb-3">
+                        <label asp-for="Tags" class="control-label font-weight-bold text-success"><i class="fas fa-tags mr-2"></i>Thẻ phân loại (Tags)</label>
+                        <input asp-for="Tags" class="form-control" placeholder="Ví dụ: Quán ốc, Ăn vặt, Vỉa hè..." />
+                        <small class="form-text text-muted">Nhập từ khóa rồi nhấn <b>Enter</b> hoặc <b>dấu phẩy (,)</b> để tạo Tag.</small>
+                        <span asp-validation-for="Tags" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
@@ -160,53 +186,77 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <script>
-        // Xem trước ảnh khi chọn file từ máy
-        function previewImage(input) {
-            var preview = document.getElementById('imagePreview');
-            var label = input.nextElementSibling;
+    <link href="https://cdn.jsdelivr.net/npm/@@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@@yaireo/tagify"></script>
 
-            if (input.files && input.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.classList.remove('d-none');
-                };
-                reader.readAsDataURL(input.files[0]);
-                // Cập nhật tên file lên label
-                label.textContent = input.files[0].name;
-            }
+    <script>
+        // Preview Hình ảnh
+        function previewImage(input) {
+        var preview = document.getElementById('imagePreview');
+        var label = input.nextElementSibling;
+        if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+        preview.src = e.target.result;
+        preview.classList.remove('d-none');
+        };
+        reader.readAsDataURL(input.files[0]);
+        label.textContent = input.files[0].name;
+        }
         }
 
-        // Xem trước audio khi chọn file từ máy
+        // Preview Audio Tiếng Việt
         function previewAudio(input) {
-            var label = input.nextElementSibling;
-            if (input.files && input.files[0]) {
-                var file = input.files[0];
-                var url = URL.createObjectURL(file);
+        var label = input.nextElementSibling;
+        if (input.files && input.files[0]) {
+        var file = input.files[0];
+        var url = URL.createObjectURL(file);
+        var wrap = document.getElementById('audioPreviewWrap');
+        if (wrap) wrap.style.display = 'block';
+        var player = document.getElementById('audioPreview');
+        if (player) {
+        player.src = url;
+        player.load();
+        }
+        label.textContent = file.name;
+        }
+        }
 
-                // Hiển thị wrap nếu đang bị ẩn (trường hợp chưa có audio cũ)
-                var wrap = document.getElementById('audioPreviewWrap');
-                if (wrap) wrap.style.display = 'block';
-
-                // Set source cho audio player
-                var player = document.getElementById('audioPreview');
-                if (player) {
-                    player.src = url;
-                    player.load();
-                }
-
-                // Cập nhật tên file lên label
-                label.textContent = file.name;
-            }
+        // Preview Audio Tiếng Anh
+        function previewAudioEn(input) {
+        var label = input.nextElementSibling;
+        if (input.files && input.files[0]) {
+        var file = input.files[0];
+        var url = URL.createObjectURL(file);
+        var wrap = document.getElementById('audioPreviewWrapEn');
+        if (wrap) wrap.style.display = 'block';
+        var player = document.getElementById('audioPreviewEn');
+        if (player) {
+        player.src = url;
+        player.load();
+        }
+        label.textContent = file.name;
+        }
         }
 
         $(document).ready(function() {
-        // 1. Lấy tọa độ hiện tại từ Database đổ ra (nếu lỗi thì mặc định Vĩnh Khánh)
+        // --- KÍCH HOẠT HIỆU ỨNG TAGIFY ---
+        var tagInput = document.querySelector('input[name="Tags"]');
+        if (tagInput) {
+        new Tagify(tagInput, {
+        originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(','), // Lưu dạng: "Quán ốc,Ăn vặt"
+        dropdown: {
+        maxItems: 10,
+        classname: "tags-look",
+        enabled: 0,
+        closeOnSelect: false
+        }
+        });
+        }
+
+        // --- KÍCH HOẠT BẢN ĐỒ ---
         var currentLat = parseFloat($('#latInput').val().replace(',','.')) || 10.760111;
         var currentLng = parseFloat($('#lngInput').val().replace(',','.')) || 106.700465;
-            
-        // 2. Khởi tạo map tại vị trí cũ của quán
         var map = L.map('map').setView([currentLat, currentLng], 17);
             
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -214,25 +264,15 @@
         attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // 3. Cắm ghim (Marker) tại vị trí hiện tại
-        var marker = L.marker([currentLat, currentLng]).addTo(map)
-        .bindPopup("<b>Vị trí hiện tại</b>").openPopup();
+        var marker = L.marker([currentLat, currentLng]).addTo(map).bindPopup("<b>Vị trí hiện tại</b>").openPopup();
 
-        // 4. Sự kiện Click để thay đổi tọa độ
         map.on('click', function(e) {
         var lat = e.latlng.lat.toFixed(6);
         var lng = e.latlng.lng.toFixed(6);
-
-        // Cập nhật giá trị vào 2 ô Input
         $('#latInput').val(lat);
         $('#lngInput').val(lng);
-
-        // Di chuyển ghim đến vị trí mới
-        if(marker) {
-        map.removeLayer(marker);
-        }
-        marker = L.marker([lat, lng]).addTo(map)
-        .bindPopup("Vị trí mới được chọn:<br>" + lat + ", " + lng).openPopup();
+        if(marker) { map.removeLayer(marker); }
+        marker = L.marker([lat, lng]).addTo(map).bindPopup("Vị trí mới được chọn:<br>" + lat + ", " + lng).openPopup();
         });
         });
     </script>

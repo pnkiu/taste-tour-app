@@ -181,14 +181,44 @@ namespace TravelGuide.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var audio = await _context.Audios.FindAsync(id);
+            // 1. Lấy thông tin Audio sắp bị xóa (kèm theo thông tin POI của nó)
+            var audio = await _context.Audios
+                .Include(a => a.POI) // Lấy luôn POI để lát nữa cập nhật
+                .FirstOrDefaultAsync(m => m.Id == id);
+
             if (audio != null)
             {
-                // Nếu muốn xịn hơn, sau này có thể viết thêm code xóa luôn file MP3 vật lý trong wwwroot ở đây
+                // 2. MA THUẬT: Cập nhật ngược lại bảng POI (Dọn rác)
+                if (audio.POI != null)
+                {
+                    // Kiểm tra xem đây là file Tiếng Việt hay Tiếng Anh để xóa đúng cột
+                    if (audio.Language == "Tiếng Việt (VN)")
+                    {
+                        audio.POI.AudioContent = null; // Xóa link Tiếng Việt
+                    }
+                    else if (audio.Language == "English (EN)")
+                    {
+                        audio.POI.AudioContentEn = null; // Xóa link Tiếng Anh
+                    }
+                    // Cập nhật sự thay đổi này xuống Database
+                    _context.POIs.Update(audio.POI);
+                }
+
+                // 3. Xóa file vật lý lưu trên ổ cứng Server (Để giải phóng dung lượng)
+                if (!string.IsNullOrEmpty(audio.FileUrl))
+                {
+                    var filePath = Path.Combine(_hostEnvironment.WebRootPath, audio.FileUrl.TrimStart('/'));
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                }
+
+                // 4. Xóa dòng Audio này trong bảng Audios của Database
                 _context.Audios.Remove(audio);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

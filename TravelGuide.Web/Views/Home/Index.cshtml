@@ -1,81 +1,237 @@
-﻿@{
-    ViewData["Title"] = "TasteTourApp - Dashboard";
+﻿@model dynamic
+@{
+    ViewData["Title"] = "TasteTour - Admin Dashboard";
 }
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Bảng điều khiển hệ thống</h1>
-    <a href="/swagger" target="_blank" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
-        <i class="fas fa-code fa-sm text-white-50"></i> Kiểm tra API
-    </a>
-</div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-<div class="row">
+<div class="d-flex flex-column" style="min-height: calc(100vh - 170px);">
 
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng số Địa điểm (POI)</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalPOIs</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-map-marker-alt fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-xs"><a asp-controller="POIs" asp-action="Index">Xem chi tiết &rarr;</a></div>
-            </div>
-        </div>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800 font-weight-bold">Bảng điều khiển hệ thống</h1>
+        <a href="/swagger" target="_blank" class="btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-code fa-sm text-white-50"></i> Kiểm tra API
+        </a>
     </div>
 
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">File Thuyết minh (Audio)</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalAudios</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-headphones fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-                <div class="mt-2 text-xs"><a asp-controller="Audios" asp-action="Index">Quản lý file &rarr;</a></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-4 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Hành trình (Tours)</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalTours</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="fas fa-route fa-2x text-gray-300"></i>
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng số Địa điểm (POI)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalPOIs</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-map-marker-alt fa-2x text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
-                <div class="mt-2 text-xs"><a asp-controller="Tours" asp-action="Index">Quản lý hành trình &rarr;</a></div>
             </div>
         </div>
-    </div>
-</div>
 
-<div class="row">
-    <div class="col-lg-12 mb-4">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Giới thiệu dự án Taste Tour App</h6>
-            </div>
-            <div class="card-body">
-                <div class="text-center">
-                    <img class="img-fluid px-3 px-sm-4 mt-3 mb-4" style="width: 15rem;" src="~/img/undraw_posting_photo.svg" alt="...">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Thiết bị đang dùng App</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalActiveDevices">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-mobile-alt fa-2x text-gray-300"></i>
+                        </div>
                     </div>
-                    <p>Chào mừng đến với hệ thống quản trị <b>Taste Tour</b>. Đây là nền tảng quản lý các điểm đến ẩm thực tại khu phố Vĩnh Khánh. Dữ liệu bạn nhập ở đây sẽ được đồng bộ trực tiếp sang ứng dụng Mobile qua cổng API.</p>
-                    <p class="mb-0">Dự án được phát triển bởi nhóm sinh viên SGU, sử dụng công nghệ .NET 8 MVC và .NET MAUI.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Hành trình (Tours)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalTours</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-route fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="row mb-4">
+        
+        <div class="col-lg-8 mb-4 mb-lg-0">
+            <div class="card shadow h-100">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-users mr-2"></i>Danh sách thiết bị trực tuyến</h6>
+                    <span class="badge badge-success" id="connectionStatus">Đang kết nối Hub...</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="height: 500px; overflow-y: auto;">
+                        <table class="table table-hover mb-0">
+                            <thead class="thead-light" style="position: sticky; top: 0; z-index: 1;">
+                                <tr>
+                                    <th style="width: 25%">Mã thiết bị</th>
+                                    <th style="width: 15%">HĐH</th>
+                                    <th style="width: 25%">Vị trí (GPS)</th>
+                                    <th style="width: 15%">Giờ vào</th>
+                                    <th style="width: 20%">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activeDeviceList">
+                                <tr id="noDeviceRow">
+                                    <td colspan="5" class="text-center text-muted py-5 mt-5">
+                                        <i class="fas fa-spinner fa-spin mr-2"></i> Đang chờ kết nối từ ứng dụng Mobile...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow border-bottom-danger h-100">
+                <div class="card-header py-3 bg-dark d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-white text-truncate">
+                        <i class="fas fa-map-marked-alt text-warning mr-2"></i>Bản đồ Heatmap
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map" style="height: 500px; width: 100%; border-bottom-left-radius: 0.35rem; border-bottom-right-radius: 0.35rem;"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row mt-auto">
+        <div class="col-12 mb-2">
+            <div class="card shadow">
+                <div class="card-body text-center py-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <img class="img-fluid px-3" style="max-height: 120px;" src="~/img/undraw_posting_photo.svg" alt="...">
+                        </div>
+                        <div class="col-md-9 text-md-left">
+                            <p class="text-gray-800 mb-1">
+                                Hệ thống quản trị <strong>Taste Tour - Phố ẩm thực Vĩnh Khánh</strong>
+                            </p>
+                            <p class="mb-0 text-muted small">
+                                Sinh viên thực hiện: <strong>Nguyễn Huỳnh Hoàng Vũ</strong> & <strong>Nguyễn Tấn Phát</strong> (ĐH Sài Gòn - SGU)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
+
+<style>
+    .blink_me { animation: blinker 1.5s linear infinite; }
+    @@keyframes blinker { 50% { opacity: 0; } }
+    #activeDeviceList tr { transition: background-color 1.5s ease; }
+</style>
+
+@section Scripts {
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://leaflet.github.io/Leaflet.heat/dist/leaflet-heat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // 1. CẤU HÌNH BẢN ĐỒ VĨNH KHÁNH
+            var map = L.map('map').setView([10.7600, 106.7050], 16);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            var heatPoints = [];
+            var heatLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 17 }).addTo(map);
+            var deviceMarkers = {};
+
+            // 2. CẤU HÌNH SIGNALR
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/deviceHub")
+                .build();
+
+            // SỰ KIỆN MÁY VÀO (Nhận thêm lat, lng từ Backend)
+            connection.on("OnDeviceConnected", function (connectionId, deviceId, platform, joinTime, lat, lng) {
+                $('#noDeviceRow').remove();
+                
+                let currentCount = parseInt($('#totalActiveDevices').text()) || 0;
+                $('#totalActiveDevices').text(currentCount + 1).addClass('text-success');
+                setTimeout(() => $('#totalActiveDevices').removeClass('text-success'), 1000);
+
+                var latLngText = "Đang lấy...";
+
+                // Nếu có gửi tọa độ lên thì vẽ lên bản đồ
+                if (lat && lng) {
+                    latLngText = lat.toFixed(5) + ", " + lng.toFixed(5);
+                    
+                    // Thêm đốm nhiệt
+                    heatPoints.push([lat, lng, 0.7]);
+                    heatLayer.setLatLngs(heatPoints);
+
+                    // Thêm Marker chấm xanh
+                    if (deviceMarkers[connectionId]) map.removeLayer(deviceMarkers[connectionId]);
+                    deviceMarkers[connectionId] = L.circleMarker([lat, lng], { radius: 6, color: 'blue', fillColor: '#3388ff', fillOpacity: 1 }).addTo(map)
+                        .bindPopup("Thiết bị: " + deviceId);
+                }
+
+                // Cập nhật dòng trong bảng
+                var newRow = `
+                    <tr id="${connectionId}" class="bg-success text-white">
+                        <td class="text-truncate" style="max-width: 150px;" title="${deviceId}"><strong>${deviceId}</strong></td>
+                        <td><i class="fas fa-mobile-alt mr-2"></i>${platform}</td>
+                        <td><code>${latLngText}</code></td>
+                        <td>${joinTime}</td>
+                        <td><span class="badge badge-light text-success font-weight-bold">Đang Online</span></td>
+                    </tr>
+                `;
+                $("#activeDeviceList").prepend(newRow);
+                setTimeout(() => $(`#${connectionId}`).removeClass("bg-success text-white"), 2000);
+            });
+
+            // SỰ KIỆN MÁY THOÁT
+            connection.on("OnDeviceDisconnected", function (connectionId) {
+                // Xóa marker trên bản đồ
+                if (deviceMarkers[connectionId]) {
+                    map.removeLayer(deviceMarkers[connectionId]);
+                    delete deviceMarkers[connectionId];
+                }
+
+                var row = $(`#${connectionId}`);
+                if (row.length) {
+                    let currentCount = parseInt($('#totalActiveDevices').text()) || 1;
+                    $('#totalActiveDevices').text(Math.max(0, currentCount - 1)).addClass('text-danger');
+                    setTimeout(() => $('#totalActiveDevices').removeClass('text-danger'), 1000);
+
+                    row.addClass("bg-danger text-white");
+                    row.find(".badge").removeClass("badge-light text-success").addClass("badge-dark").text("Đã thoát");
+                    
+                    setTimeout(() => { 
+                        row.fadeOut("slow", function() { $(this).remove(); }); 
+                    }, 3000);
+                }
+            });
+
+            connection.start().then(function () {
+                console.log("SignalR Connected!");
+                $("#connectionStatus").text("Hub & Map Ready").removeClass("badge-success").addClass("badge-primary");
+            }).catch(function (err) {
+                $("#connectionStatus").text("Lỗi kết nối").removeClass("badge-success").addClass("badge-danger");
+                return console.error(err.toString());
+            });
+
+            // Sửa lỗi bản đồ bị co rút khi nằm trong lưới nhỏ
+            setTimeout(function(){ map.invalidateSize()}, 400);
+        });
+    </script>
+}
