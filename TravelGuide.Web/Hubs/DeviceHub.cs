@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 using System;
 
@@ -7,49 +8,63 @@ namespace TravelGuide.Web.Hubs
 {
     public class DeviceHub : Hub
     {
-        // ─── Lưu trạng thái thiết bị đang Online (dùng ConcurrentDictionary cho thread-safe) ───
-        // Key = connectionId của MOBILE, Value = thông tin thiết bị
+        // ─── Key = deviceId (ID vật lý của thiết bị), KHÔNG dùng connectionId ───
+        // Lý do: connectionId thay đổi mỗi lần reconnect, nhưng deviceId luôn cố định
+        // → Cùng 1 thiết bị vật lý chỉ có DUY NHẤT 1 entry, dù navigate bao nhiêu lần
         private static readonly ConcurrentDictionary<string, DeviceInfo> _onlineDevices = new();
 
         public class DeviceInfo
         {
-            public string DeviceId   { get; set; } = "";
-            public string Platform   { get; set; } = "";
-            public string JoinTime   { get; set; } = "";
-            public double Lat        { get; set; }
-            public double Lng        { get; set; }
+            public string ConnectionId { get; set; } = ""; // SignalR connectionId hiện tại
+            public string DeviceId     { get; set; } = ""; // ID vật lý (stable, từ Preferences)
+            public string Platform     { get; set; } = "";
+            public string JoinTime     { get; set; } = "";
+            public double Lat          { get; set; }
+            public double Lng          { get; set; }
         }
 
-        // 1. Hàm dành cho Mobile gọi lên khi vừa mở App
+        // 1. Mobile gọi khi vào app (hoặc navigate giữa các trang)
         public async Task DeviceJoined(string deviceId, string platform, double lat, double lng)
         {
-            var joinTime    = DateTime.Now.ToString("HH:mm:ss");
             var connectionId = Context.ConnectionId;
 
-            // Lưu vào dictionary để khi admin web reload không mất
-            _onlineDevices[connectionId] = new DeviceInfo
+            if (_onlineDevices.TryGetValue(deviceId, out var existing))
             {
-                DeviceId  = deviceId,
-                Platform  = platform,
-                JoinTime  = joinTime,
-                Lat       = lat,
-                Lng       = lng
-            };
+                // Thiết bị VẬT LÝ này đã có → chỉ cập nhật connectionId + vị trí
+                // KHÔNG tạo entry mới → web KHÔNG thêm row mới
+                existing.ConnectionId = connectionId;
+                existing.Lat = lat;
+                existing.Lng = lng;
 
-            // Phát broadcast cho TẤT CẢ client (bao gồm admin web)
-            await Clients.All.SendAsync("OnDeviceConnected", connectionId, deviceId, platform, joinTime, lat, lng);
+                await Clients.All.SendAsync("OnDeviceLocationUpdated", connectionId, lat, lng);
+            }
+            else
+            {
+                // Thiết bị mới hoàn toàn → tạo entry, broadcast cho web
+                var joinTime = DateTime.Now.ToString("HH:mm:ss");
+                _onlineDevices[deviceId] = new DeviceInfo
+                {
+                    ConnectionId = connectionId,
+                    DeviceId     = deviceId,
+                    Platform     = platform,
+                    JoinTime     = joinTime,
+                    Lat          = lat,
+                    Lng          = lng
+                };
+
+                await Clients.All.SendAsync("OnDeviceConnected", connectionId, deviceId, platform, joinTime, lat, lng);
+            }
         }
 
-        // 2. Khi Web Admin kết nối vào Hub, gửi lại toàn bộ danh sách thiết bị đang online
+        // 2. Web Admin kết nối → gửi lại toàn bộ danh sách thiết bị đang online
         public override async Task OnConnectedAsync()
         {
-            // Gửi danh sách hiện tại CHỈ cho client vừa kết nối (Clients.Caller)
             foreach (var kv in _onlineDevices)
             {
                 var info = kv.Value;
                 await Clients.Caller.SendAsync(
                     "OnDeviceConnected",
-                    kv.Key,           // connectionId
+                    info.ConnectionId,
                     info.DeviceId,
                     info.Platform,
                     info.JoinTime,
@@ -61,16 +76,20 @@ namespace TravelGuide.Web.Hubs
             await base.OnConnectedAsync();
         }
 
-        // 3. Tự động chạy khi Mobile bị tắt mạng hoặc đóng App
+        // 3. Tự động chạy khi Mobile mất kết nối
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var connectionId = Context.ConnectionId;
 
-            // Xoá khỏi dictionary
-            _onlineDevices.TryRemove(connectionId, out _);
+            // Tìm thiết bị theo connectionId hiện tại (key là deviceId)
+            var toRemove = _onlineDevices.FirstOrDefault(
+                kv => kv.Value.ConnectionId == connectionId);
 
-            // Phát broadcast thông báo ngắt kết nối
-            await Clients.All.SendAsync("OnDeviceDisconnected", connectionId);
+            if (toRemove.Key != null)
+            {
+                _onlineDevices.TryRemove(toRemove.Key, out _);
+                await Clients.All.SendAsync("OnDeviceDisconnected", connectionId);
+            }
 
             await base.OnDisconnectedAsync(exception);
         }

@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TasteTourApp", "TasteTourApp.csproj", "{35E757B5-477B-4C12-3A07-6B533E405FBF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{35E757B5-477B-4C12-3A07-6B533E405FBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35E757B5-477B-4C12-3A07-6B533E405FBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35E757B5-477B-4C12-3A07-6B533E405FBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35E757B5-477B-4C12-3A07-6B533E405FBF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4FCFE540-38FD-45A9-AEF7-B70369C7BFC7}
+	EndGlobalSection
+EndGlobal

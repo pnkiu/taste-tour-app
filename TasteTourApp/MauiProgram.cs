@@ -27,9 +27,9 @@ namespace TasteTourApp
             builder.Services.AddSingleton<SyncService>();
             // Frictionless Onboarding: nhận diện thiết bị thay vì tài khoản
             builder.Services.AddSingleton<DeviceService>();
-            builder.Services.AddTransient<MainPage>();
-            builder.Services.AddTransient<SavedPage>();
-            builder.Services.AddTransient<ProfilePage>();
+            builder.Services.AddSingleton<MainPage>();
+            builder.Services.AddSingleton<SavedPage>();
+            builder.Services.AddSingleton<ProfilePage>();
 
 #if DEBUG
             builder.Logging.AddDebug();

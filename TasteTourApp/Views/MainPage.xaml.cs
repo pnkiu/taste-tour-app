@@ -20,6 +20,8 @@ namespace TasteTourApp.Views
         private bool _sheetDangMo = false;
         private bool _isMapReady = false;
         private HubConnection _hubConnection;
+        private bool _deviceRegistered = false;   // Đã gửi DeviceJoined thành công?
+        private bool _locationInitialized = false; // Đã lấy vị trí lần đầu?
 
         // TTS (Text-to-Speech)
         private CancellationTokenSource? _ttsCts = null;
@@ -253,8 +255,17 @@ namespace TasteTourApp.Views
         _dbService = dbService;
         _geofenceEngine = geofenceEngine;
         _syncService = syncService;
-            _hubConnection = new HubConnectionBuilder().WithUrl("http://192.168.31.240:5220/deviceHub") // Hỏi Vũ cái đuôi URL của Hub là gì
+
+        _hubConnection = new HubConnectionBuilder().WithUrl("http://10.0.2.2:5220/deviceHub")
                 .Build();
+
+        // Reset flag đăng ký khi kết nối bị đóng (chuẩn bị cho lần reconnect tiếp theo)
+        _hubConnection.Closed += _ =>
+        {
+            _deviceRegistered = false;
+            System.Diagnostics.Debug.WriteLine("[SignalR] Kết nối đóng, sẽ đăng ký lại khi mở app.");
+            return Task.CompletedTask;
+        };
 
             // FIX: Ẩn sheet ngay khi khởi tạo bằng cách đẩy xuống ngoài màn hình
             TheChiTiet.SizeChanged += OnSheetSizeChanged;
@@ -361,23 +372,64 @@ namespace TasteTourApp.Views
 
         // Load dữ liệu local trước (hiển thị ngay lập tức)
         await LoadDuLieuTuKho();
-        _ = GetUserLocationAsync(); // Fire and forget
 
         // Đồng bộ từ API sau (không chặn UI)
         _ = _syncService.SyncAsync();
-            try
+
+        // Chỉ lấy vị trí lần đầu tiên vào app (không gọi lại khi navigate back)
+        if (!_locationInitialized)
+        {
+            _locationInitialized = true;
+            await GetUserLocationAsync();
+        }
+
+        // Kết nối Hub và đăng ký thiết bị (tuần tự, chờ kết nối xong mới đăng ký)
+        await ConnectAndRegisterHubAsync();
+    }
+
+
+
+    // ============================================================
+    //  KẾT NỐI HUB VÀ ĐĂNG KÝ THIẾT BỊ (chỉ 1 lần duy nhất)
+    // ============================================================
+    private async Task ConnectAndRegisterHubAsync()
+    {
+        try
+        {
+            // Bước 1: Kết nối nếu chưa connected
+            if (_hubConnection.State == HubConnectionState.Disconnected)
             {
-                if (_hubConnection.State == HubConnectionState.Disconnected)
-                {
-                    await _hubConnection.StartAsync();
-                    System.Diagnostics.Debug.WriteLine("[SignalR] Kết nối Hub thành công!");
-                }
+                await _hubConnection.StartAsync();
+                System.Diagnostics.Debug.WriteLine("[SignalR] Kết nối Hub thành công!");
             }
-            catch (Exception ex)
+
+            // Bước 2: Chỉ gửi DeviceJoined nếu CHƯA đăng ký
+            // (navigate back về MainPage → _deviceRegistered = true → bỏ qua hoàn toàn)
+            if (!_deviceRegistered && _hubConnection.State == HubConnectionState.Connected)
             {
-                System.Diagnostics.Debug.WriteLine($"[SignalR] Lỗi kết nối: {ex.Message}");
+                var deviceId = Preferences.Get("device_id", null);
+                if (string.IsNullOrEmpty(deviceId))
+                {
+                    deviceId = Guid.NewGuid().ToString("N")[..8].ToUpper();
+                    Preferences.Set("device_id", deviceId);
+                }
+                var deviceLabel = $"{DeviceInfo.Current.Name} [{deviceId}]";
+                var platform    = DeviceInfo.Current.Platform.ToString();
+
+                await _hubConnection.SendAsync("DeviceJoined", deviceLabel, platform, _userLat, _userLng);
+                _deviceRegistered = true;
+                System.Diagnostics.Debug.WriteLine($"[SignalR] Đã đăng ký thiết bị: {deviceLabel}");
+            }
+            else if (_deviceRegistered)
+            {
+                System.Diagnostics.Debug.WriteLine("[SignalR] Thiết bị đã đăng ký rồi, bỏ qua.");
             }
         }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[SignalR] Lỗi: {ex.Message}");
+        }
+    }
 
     // ============================================================
     //  ÁP DỤNG NGÔN NGỮ GIAO DIỆN
@@ -412,9 +464,9 @@ namespace TasteTourApp.Views
     // 🧪 TỌA ĐỘ MẪU — thay đổi tại đây để test các vị trí khác nhau
     // Vị trí này nằm trên đường Vĩnh Khánh, gần các quán ốc
     private const double MOCK_LAT = 10.761615; // 10.761615, 106.702392
-        private const double MOCK_LNG = 106.702392;
+    private const double MOCK_LNG = 106.702392;
 
-        private async Task GetUserLocationAsync()
+    private async Task GetUserLocationAsync()
     {
         // ── DÙNG TỌA ĐỘ MẪU ĐỂ TEST ──
         _userLat = MOCK_LAT;
@@ -432,28 +484,8 @@ namespace TasteTourApp.Views
 
         // Vẫn giữ HighlightNearestPoi để UI update ngay lập tức (không chờ debounce)
         await HighlightNearestPoi();
-            try
-            {
-                if (_hubConnection != null && _hubConnection.State == HubConnectionState.Connected)
-                {
-                    // Lấy device ID thật: GUID được tạo 1 lần và lưu vào Preferences
-                    var deviceId = Preferences.Get("device_id", null);
-                    if (string.IsNullOrEmpty(deviceId))
-                    {
-                        deviceId = Guid.NewGuid().ToString("N")[..8].ToUpper(); // 8 ký tự đầu cho gọn
-                        Preferences.Set("device_id", deviceId);
-                    }
-                    var deviceLabel = $"{DeviceInfo.Current.Name} [{deviceId}]";
-                    var platform = DeviceInfo.Current.Platform.ToString();
-
-                    await _hubConnection.SendAsync("DeviceJoined", deviceLabel, platform, _userLat, _userLng);
-                    System.Diagnostics.Debug.WriteLine($"[SignalR] Đã đăng ký thiết bị: {deviceLabel}");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[SignalR] Lỗi gửi tọa độ: {ex.Message}");
-            }
+        // GHI CHÚ: Việc đăng ký thiết bị với Hub đã được chuyển sang ConnectAndRegisterHubAsync()
+        // để đảm bảo Hub đã kết nối TRƯỚC khi gửi DeviceJoined.
 
             // ── BỎ COMMENT ĐOẠN DƯỚI ĐỂ DÙNG GPS THẬT ──
             // try
@@ -742,7 +774,7 @@ namespace TasteTourApp.Views
             // hoặc URL đầy đủ — cần build URL đầy đủ để MAUI load được
             string imageUrl = quan.HinhAnh.StartsWith("http", StringComparison.OrdinalIgnoreCase)
                 ? quan.HinhAnh
-                : $"http://192.168.31.240:5220{quan.HinhAnh}";
+                : $"http://10.0.2.2:5220{quan.HinhAnh}";
 
             ImgQuan.Source = ImageSource.FromUri(new Uri(imageUrl));
             ImgQuan.IsVisible = true;
@@ -971,7 +1003,7 @@ namespace TasteTourApp.Views
         /// </summary>
         private async Task PhatFileAudio(string audioPath)
         {
-            string baseUrl = "http://192.168.31.240:5220";
+            string baseUrl = "http://10.0.2.2:5220";
 
             // 1. DỌN DẸP LINK: Cắt bỏ khoảng trắng thừa, thay khoảng trắng giữa chữ thành %20
             string cleanPath = audioPath.Trim().Replace(" ", "%20");

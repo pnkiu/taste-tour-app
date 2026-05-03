@@ -209,6 +209,27 @@
                 }
             });
 
+            // SỰ KIỆN CẬP NHẬT VỊ TRÍ (mobile navigate back → không tạo row mới, chỉ update marker)
+            connection.on("OnDeviceLocationUpdated", function (connectionId, lat, lng) {
+                if (!lat || !lng) return;
+                // Cập nhật marker trên bản đồ
+                if (deviceMarkers[connectionId]) {
+                    deviceMarkers[connectionId].setLatLng([lat, lng]);
+                } else {
+                    deviceMarkers[connectionId] = L.circleMarker([lat, lng], { radius: 6, color: 'blue', fillColor: '#3388ff', fillOpacity: 1 }).addTo(map)
+                        .bindPopup("Thiết bị: " + connectionId);
+                }
+                // Cập nhật heatmap
+                heatPoints.push([lat, lng, 0.5]);
+                heatLayer.setLatLngs(heatPoints);
+                // Cập nhật tọa độ trong ô bảng nếu row đang tồn tại
+                var row = $(`#${connectionId}`);
+                if (row.length) {
+                    row.find("code").text(lat.toFixed(5) + ", " + lng.toFixed(5));
+                }
+            });
+
+
             // SỰ KIỆN MÁY THOÁT
             connection.on("OnDeviceDisconnected", function (connectionId) {
                 knownConnections.delete(connectionId);
