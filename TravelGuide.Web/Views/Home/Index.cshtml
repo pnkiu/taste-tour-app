@@ -158,7 +158,6 @@
 
             // Track connectionId đã biết để tránh cộng đôi khi server gửi lại danh sách cũ
             var knownConnections = new Set();
-
             function updateDeviceCount() {
                 $('#totalActiveDevices').text(knownConnections.size);
             }
