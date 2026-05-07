@@ -4,6 +4,15 @@ using TasteTourApp.Models;
 
 namespace TasteTourApp.Services
 {
+    // DTO nhẹ — chỉ dùng ở tầng service, không cần SQLite
+    public record TourDto(
+        int     Id,
+        string  Name,
+        string? Description,
+        string? Duration,
+        string? Distance,
+        string? ImageUrl);
+
     public class ApiService
     {
         private readonly HttpClient _httpClient;
@@ -59,6 +68,62 @@ namespace TasteTourApp.Services
             {
                 System.Diagnostics.Debug.WriteLine($"[ApiService] Lỗi: {ex.Message}");
                 return new List<QuanAn>();
+            }
+        }
+
+        // ============================================================
+        //  LẤY DANH SÁCH POI THEO TOUR (có orderIndex)
+        // ============================================================
+        public async Task<List<QuanAn>> FetchTourPoisAsync(int tourId)
+        {
+            try
+            {
+                if (!IsNetworkAvailable())
+                {
+                    System.Diagnostics.Debug.WriteLine("[ApiService] Offline — không thể lấy tour POIs.");
+                    return new List<QuanAn>();
+                }
+
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                jsonOptions.Converters.Add(new IntToStringConverter());
+
+                var response = await _httpClient.GetFromJsonAsync<List<QuanAn>>(
+                    $"{_baseUrl}/ToursApi/{tourId}/pois", jsonOptions);
+
+                return response ?? new List<QuanAn>();
+            }
+            catch (TaskCanceledException)
+            {
+                System.Diagnostics.Debug.WriteLine("[ApiService] FetchTourPois timeout.");
+                return new List<QuanAn>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiService] FetchTourPois lỗi: {ex.Message}");
+                return new List<QuanAn>();
+            }
+        }
+
+        // ============================================================
+        //  LẤY THÔNG TIN TOUR
+        // ============================================================
+        public async Task<TourDto?> FetchTourAsync(int tourId)
+        {
+            try
+            {
+                if (!IsNetworkAvailable()) return null;
+
+                var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return await _httpClient.GetFromJsonAsync<TourDto>(
+                    $"{_baseUrl}/ToursApi/{tourId}", jsonOptions);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApiService] FetchTour lỗi: {ex.Message}");
+                return null;
             }
         }
     }

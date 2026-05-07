@@ -22,6 +22,10 @@ namespace TasteTourApp.Views
         private HubConnection _hubConnection;
         private bool _deviceRegistered = false;   // Đã gửi DeviceJoined thành công?
         private bool _locationInitialized = false; // Đã lấy vị trí lần đầu?
+        private List<QuanAn>? _activeTourPois = null;
+        private string? _activeTourName = null;
+        private int _activeTourIndex = -1;
+        private bool _pendingOpenTourStep = false;
 
         // TTS (Text-to-Speech)
         private CancellationTokenSource? _ttsCts = null;
@@ -303,6 +307,8 @@ namespace TasteTourApp.Views
                     await BanDoWebView.EvaluateJavaScriptAsync($"setNearestMarker('{_nearestPoiId}')");
                 }
             }
+
+            await TryOpenPendingTourStepAsync();
         }
 
         // ── GeofenceEngine event handlers ────────────────────────────────
@@ -313,6 +319,7 @@ namespace TasteTourApp.Views
             System.Diagnostics.Debug.WriteLine($"[Geofence] {trigger.Type}: {trigger.Quan.TenQuan}");
 
             if (trigger.Type == GeofenceTriggerType.Nearby) return;
+            if (IsTourModeActive) return;
             if (_sheetDangMo) return;
 
             // 👇 BỎ dòng if (_dangPhatTTS) return; đi, thay bằng đoạn này:
@@ -370,11 +377,26 @@ namespace TasteTourApp.Views
         // Áp dụng ngôn ngữ giao diện
         ApplyLanguage();
 
-        // Load dữ liệu local trước (hiển thị ngay lập tức)
-        await LoadDuLieuTuKho();
+        // Nếu user vừa bắt đầu tour → dùng POI của tour thay vì toàn bộ DB
+        if (TourPage.PendingTourPois != null && TourPage.PendingTourPois.Count > 0)
+        {
+            _activeTourPois = TourPage.PendingTourPois.ToList();
+            _activeTourName = TourPage.PendingTourName;
+            _activeTourIndex = 0;
+            _pendingOpenTourStep = true;
 
-        // Đồng bộ từ API sau (không chặn UI)
-        _ = _syncService.SyncAsync();
+            await LoadDuLieuTuKho(_activeTourPois);
+            ShowTourBanner(_activeTourName);
+            TourPage.ClearPendingTour();
+        }
+        else
+        {
+            // Load dữ liệu local trước (hiển thị ngay lập tức)
+            await LoadDuLieuTuKho();
+
+            // Đồng bộ từ API sau (không chặn UI)
+            _ = _syncService.SyncAsync();
+        }
 
         // Chỉ lấy vị trí lần đầu tiên vào app (không gọi lại khi navigate back)
         if (!_locationInitialized)
@@ -385,7 +407,36 @@ namespace TasteTourApp.Views
 
         // Kết nối Hub và đăng ký thiết bị (tuần tự, chờ kết nối xong mới đăng ký)
         await ConnectAndRegisterHubAsync();
+
+        await TryOpenPendingTourStepAsync();
     }
+
+    private bool IsTourModeActive =>
+        _activeTourPois != null
+        && _activeTourPois.Count > 0
+        && _activeTourIndex >= 0
+        && _activeTourIndex < _activeTourPois.Count;
+
+    // ============================================================
+    //  BANNER TOUR ĐANG CHẠY
+    // ============================================================
+    private void ShowTourBanner(string? tourName)
+    {
+        try
+        {
+            // Tìm label tên banner nếu có trong XAML (TourBannerLabel)
+            // Nếu không có thì bỏ qua — banner là tính năng bonus
+            var banner = this.FindByName<Border>("TourActiveBanner");
+            var label  = this.FindByName<Label>("LblTourBannerName");
+            if (banner != null && label != null)
+            {
+                label.Text    = $"🧭 {tourName ?? "Tour đang chạy"}";
+                banner.IsVisible = true;
+            }
+        }
+        catch { /* ignore nếu không có banner trong layout */ }
+    }
+
 
 
 
@@ -444,7 +495,7 @@ namespace TasteTourApp.Views
     }
 
     // ============================================================
-    //  LOAD DỮ LIỆU
+    //  LOAD DỮ LIỆU (overload: dùng list tour POI hoặc toàn bộ DB)
     // ============================================================
     private async Task LoadDuLieuTuKho()
     {
@@ -455,6 +506,29 @@ namespace TasteTourApp.Views
         LblPoiCount.Text = AppLanguage.IsEnglish
             ? $"{_danhSachQuan.Count} places"
             : $"{_danhSachQuan.Count} điểm";
+    }
+
+    private Task LoadDuLieuTuKho(List<QuanAn> tourPois)
+    {
+        _danhSachQuan = tourPois;
+        var html = TaoHtmlBanDo(_danhSachQuan);
+        BanDoWebView.Source = new HtmlWebViewSource { Html = html };
+        RenderPoiCards(_danhSachQuan);
+        LblPoiCount.Text = AppLanguage.IsEnglish
+            ? $"{_danhSachQuan.Count} stops"
+            : $"{_danhSachQuan.Count} điểm dừng";
+        return Task.CompletedTask;
+    }
+
+    private async Task TryOpenPendingTourStepAsync()
+    {
+        if (!_pendingOpenTourStep || !_isMapReady || !IsTourModeActive)
+        {
+            return;
+        }
+
+        _pendingOpenTourStep = false;
+        await OpenCurrentTourStepAsync();
     }
 
     // ============================================================
@@ -731,7 +805,8 @@ namespace TasteTourApp.Views
     // ============================================================
     private async Task MoChiTiet(string idQuan)
     {
-        var quan = await _dbService.LayQuanAnTheoId(idQuan);
+        var quan = _danhSachQuan.FirstOrDefault(q => q.Id == idQuan)
+            ?? await _dbService.LayQuanAnTheoId(idQuan);
         if (quan == null) return;
 
         // Dừng TTS nếu đang phát POI trước đó
@@ -759,6 +834,7 @@ namespace TasteTourApp.Views
                 : $"{currentLangName} · TTS";
         LblPlayIcon.Text = "▶";
         LblRating.Text = "4.5";
+        UpdateTourStepPanel(quan.Id);
 
         // Cập nhật trạng thái tim theo DB
         BtnHeartPoi.Text = quan.IsSaved ? "❤️" : "🤍";
@@ -802,6 +878,92 @@ namespace TasteTourApp.Views
 
         // Trượt sheet lên
         await TheChiTiet.TranslateTo(0, 0, 350, Easing.CubicOut);
+    }
+
+    private void UpdateTourStepPanel(string currentPoiId)
+    {
+        if (!IsTourModeActive)
+        {
+            TourStepPanel.IsVisible = false;
+            return;
+        }
+
+        var currentIndex = _activeTourPois!.FindIndex(q => q.Id == currentPoiId);
+        if (currentIndex >= 0)
+        {
+            _activeTourIndex = currentIndex;
+        }
+
+        TourStepPanel.IsVisible = true;
+        LblTourStep.Text = AppLanguage.T(
+            $"Điểm {_activeTourIndex + 1}/{_activeTourPois.Count} · {_activeTourName ?? "Tour đang chạy"}",
+            $"Stop {_activeTourIndex + 1}/{_activeTourPois.Count} · {_activeTourName ?? "Active tour"}");
+        LblTourNext.Text = _activeTourIndex >= _activeTourPois.Count - 1
+            ? AppLanguage.T("Hoàn tất", "Finish")
+            : AppLanguage.T("Điểm tiếp theo", "Next stop");
+        LblTourExit.Text = AppLanguage.T("Thoát tour", "Exit tour");
+    }
+
+    private async Task OpenCurrentTourStepAsync()
+    {
+        if (!IsTourModeActive)
+        {
+            return;
+        }
+
+        await MoChiTiet(_activeTourPois![_activeTourIndex].Id);
+    }
+
+    private async void BtnTourNext_Tapped(object sender, EventArgs e)
+    {
+        if (!IsTourModeActive)
+        {
+            return;
+        }
+
+        await StopTts();
+
+        if (_activeTourIndex >= _activeTourPois!.Count - 1)
+        {
+            await EndTourAsync();
+            return;
+        }
+
+        _activeTourIndex++;
+        await OpenCurrentTourStepAsync();
+    }
+
+    private async void BtnTourExit_Tapped(object sender, EventArgs e)
+    {
+        await EndTourAsync();
+    }
+
+    private async Task EndTourAsync()
+    {
+        await StopTts();
+
+        _activeTourPois = null;
+        _activeTourName = null;
+        _activeTourIndex = -1;
+        _pendingOpenTourStep = false;
+
+        TourStepPanel.IsVisible = false;
+        TourActiveBanner.IsVisible = false;
+
+        await LoadDuLieuTuKho();
+        BottomSheetDanhSach.IsVisible = true;
+        FabLocateMe.IsVisible = true;
+        BottomSheetDanhSach.Opacity = 1;
+        FabLocateMe.Opacity = 1;
+
+        if (_isMapReady)
+        {
+            await BanDoWebView.EvaluateJavaScriptAsync("highlightMarker('')");
+        }
+
+        double sheetH = TheChiTiet.Height > 0 ? TheChiTiet.Height + 20 : _sheetHeight;
+        await TheChiTiet.TranslateTo(0, sheetH, 250, Easing.CubicIn);
+        _sheetDangMo = false;
     }
 
     // ============================================================

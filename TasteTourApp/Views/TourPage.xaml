@@ -81,6 +81,9 @@
                         <!-- Tour Card 1 -->
                         <Border WidthRequest="260" HeightRequest="340" StrokeThickness="0"
                                 StrokeShape="RoundRectangle 20" BackgroundColor="#1B4332">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="TourCard1_Tapped" />
+                            </Border.GestureRecognizers>
                             <Border.Shadow>
                                 <Shadow Brush="Black" Offset="0,4" Radius="16" Opacity="0.12" />
                             </Border.Shadow>
@@ -305,6 +308,80 @@
 
             </VerticalStackLayout>
         </ScrollView>
+
+        <!-- ===== ITINERARY OVERLAY ===== -->
+        <BoxView x:Name="ItineraryOverlay" ZIndex="6"
+                 BackgroundColor="#99000000" IsVisible="False">
+            <BoxView.GestureRecognizers>
+                <TapGestureRecognizer Tapped="Overlay_Tapped" />
+            </BoxView.GestureRecognizers>
+        </BoxView>
+
+        <!-- ===== ITINERARY BOTTOM SHEET ===== -->
+        <Border x:Name="ItinerarySheet" ZIndex="7"
+                VerticalOptions="End" HorizontalOptions="Fill"
+                BackgroundColor="#FFFFFF" StrokeThickness="0"
+                StrokeShape="RoundRectangle 28,28,0,0"
+                IsVisible="False" MaximumHeightRequest="680">
+            <Border.Shadow>
+                <Shadow Brush="Black" Offset="0,-4" Radius="24" Opacity="0.12" />
+            </Border.Shadow>
+            <Grid RowDefinitions="Auto,*,Auto">
+
+                <!-- Header -->
+                <VerticalStackLayout Grid.Row="0" Padding="24,20,24,16" Spacing="6">
+                    <!-- Drag handle -->
+                    <BoxView WidthRequest="40" HeightRequest="4" CornerRadius="2"
+                             BackgroundColor="#E0E0E0" HorizontalOptions="Center"
+                             Margin="0,0,0,8" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label x:Name="LblSheetTourName"
+                                   Text="Tour Ẩm thực đêm Quận 4"
+                                   FontSize="20" FontAttributes="Bold" TextColor="#1A1A1A" />
+                            <Label x:Name="LblSheetMeta"
+                                   Text="🕐 1 phút  ·  📍 0 điểm"
+                                   FontSize="12" TextColor="#888888" Margin="0,4,0,0" />
+                        </VerticalStackLayout>
+                        <Border Grid.Column="1" BackgroundColor="#F5F5F5" StrokeThickness="0"
+                                StrokeShape="RoundRectangle 20" WidthRequest="36" HeightRequest="36"
+                                VerticalOptions="Start">
+                            <Label Text="✕" FontSize="14" TextColor="#888888"
+                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="BtnCloseSheet_Tapped" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </Grid>
+                    <!-- Divider -->
+                    <BoxView HeightRequest="1" BackgroundColor="#F0F0F0" Margin="0,8,0,0" />
+                </VerticalStackLayout>
+
+                <!-- POI Steps (scrollable) -->
+                <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
+                    <VerticalStackLayout x:Name="PoiStepsContainer"
+                                         Padding="24,12,24,8" Spacing="0" />
+                </ScrollView>
+
+                <!-- Start Button -->
+                <Border Grid.Row="2" Margin="20,12,20,32" StrokeThickness="0"
+                        StrokeShape="RoundRectangle 28" BackgroundColor="#1B4332">
+                    <Border.Shadow>
+                        <Shadow Brush="#1B4332" Offset="0,4" Radius="12" Opacity="0.35" />
+                    </Border.Shadow>
+                    <HorizontalStackLayout Spacing="10" HorizontalOptions="Center"
+                                           Padding="32,16">
+                        <Label Text="🧭" FontSize="18" VerticalOptions="Center" />
+                        <Label x:Name="BtnStartTour" Text="Bắt đầu hành trình"
+                               TextColor="White" FontSize="16" FontAttributes="Bold"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="BtnStartTour_Tapped" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </Grid>
+        </Border>
 
         <!-- ===== MINI PLAYER (Narrator) ===== -->
         <Border x:Name="MiniPlayer" ZIndex="4" VerticalOptions="End" HorizontalOptions="Fill"
