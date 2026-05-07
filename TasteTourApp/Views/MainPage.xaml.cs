@@ -256,7 +256,7 @@ namespace TasteTourApp.Views
         _geofenceEngine = geofenceEngine;
         _syncService = syncService;
 
-        _hubConnection = new HubConnectionBuilder().WithUrl("http://10.0.2.2:5220/deviceHub")
+        _hubConnection = new HubConnectionBuilder().WithUrl("http://192.168.1.230:5220/deviceHub")
                 .Build();
 
         // Reset flag đăng ký khi kết nối bị đóng (chuẩn bị cho lần reconnect tiếp theo)
@@ -774,7 +774,7 @@ namespace TasteTourApp.Views
             // hoặc URL đầy đủ — cần build URL đầy đủ để MAUI load được
             string imageUrl = quan.HinhAnh.StartsWith("http", StringComparison.OrdinalIgnoreCase)
                 ? quan.HinhAnh
-                : $"http://10.0.2.2:5220{quan.HinhAnh}";
+                : $"http://192.168.1.230:5220{quan.HinhAnh}";
 
             ImgQuan.Source = ImageSource.FromUri(new Uri(imageUrl));
             ImgQuan.IsVisible = true;
@@ -1003,7 +1003,7 @@ namespace TasteTourApp.Views
         /// </summary>
         private async Task PhatFileAudio(string audioPath)
         {
-            string baseUrl = "http://10.0.2.2:5220";
+            string baseUrl = "http://192.168.1.230:5220";
 
             // 1. DỌN DẸP LINK: Cắt bỏ khoảng trắng thừa, thay khoảng trắng giữa chữ thành %20
             string cleanPath = audioPath.Trim().Replace(" ", "%20");
