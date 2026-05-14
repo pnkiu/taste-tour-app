@@ -17,7 +17,7 @@ namespace TasteTourApp.Services
     {
         private readonly HttpClient _httpClient;
 
-        private readonly string _baseUrl = "http://192.168.1.230:5220/api";
+        private readonly string _baseUrl = "http://192.168.31.240:5220/api";
 
         public ApiService()
         {

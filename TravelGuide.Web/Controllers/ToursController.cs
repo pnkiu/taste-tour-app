@@ -26,7 +26,21 @@ namespace TravelGuide.Web.Controllers
         // GET: Tours
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Tours.ToListAsync());
+            //return View(await _context.Tours.ToListAsync());
+            var tours = await _context.Tours.ToListAsync();
+
+            var poiCounts = await _context.TourPOIs
+                .GroupBy(tp => tp.TourId)
+                .Select(g => new
+                {
+                    TourId = g.Key,
+                    Count = g.Count() * 2 
+                })
+                .ToDictionaryAsync(x => x.TourId, x => x.Count);
+
+            ViewBag.PoiCounts = poiCounts;
+
+            return View(tours);
         }
 
         // GET: Tours/Details/5

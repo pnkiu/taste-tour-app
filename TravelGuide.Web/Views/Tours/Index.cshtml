@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Quản lý Hành trình (Tour)";
+    var poiCounts = ViewBag.PoiCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
 }
 
 <h1 class="h3 mb-2 text-gray-800">Quản lý Hành trình (Tours)</h1>
@@ -21,6 +22,7 @@
                     <tr>
                         <th style="width: 100px;">Ảnh bìa</th>
                         <th>Tên Hành trình</th>
+                        <th>Số POI</th>
                         <th>Thời gian</th>
                         <th>Quãng đường</th>
                         <th style="width: 150px;">Hành động</th>
@@ -41,6 +43,9 @@
                                 }
                             </td>
                             <td class="font-weight-bold text-primary align-middle">@item.Name</td>
+                            <td class="align-middle text-center">
+                                @(poiCounts.TryGetValue(item.Id, out var count) ? count : 0)
+                            </td>
                             <td class="align-middle">@item.Duration</td>
                             <td class="align-middle">@item.Distance</td>
                             <td class="align-middle text-center">
